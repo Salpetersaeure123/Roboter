@@ -2,6 +2,30 @@
 
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
+#include "Motor.h"
+#include <functional>
+
+std::function<void()> functions[] = {
+  //sinus
+  [](){
+
+  },
+  //cosinus
+  [](){
+
+  },
+  //sägezahn
+  [](){
+
+  }
+};
+#define SINUS 0
+#define COSINUS 1
+#define SAEGEZAHN 2
+
+Motor a = Motor(18, 19);
+Motor b = Motor(16, 17);
+Motor c = Motor(26, 27);
 
 // Pick analog outputs, for the UNO these three work well
 // use ~560  ohm resistor between Red & Blue, ~1K for green (its brighter)
@@ -20,7 +44,29 @@ byte gammatable[256];
 
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
+void printSpeeds() {
+  Serial.print("Motor a: ");
+  Serial.print(a.getSpeed());
+  Serial.print(" Richtung: ");
+  Serial.println(a.getDirection()?"Links":"Rechts");
+  Serial.print("Motor b: ");
+  Serial.print(b.getSpeed());
+  Serial.print(" Richtung: ");
+  Serial.println(b.getDirection()?"Links":"Rechts");
+  Serial.print("Motor c: ");
+  Serial.print(c.getSpeed());
+  Serial.print(" Richtung: ");
+  Serial.println(c.getDirection()?"Links":"Rechts");
+}
+
 void setup() {
+  functions[0] = printSpeeds;
+  functions[1] = [](){
+    Serial.println("test");
+  };
+
+  functions[SINUS]();
+
   Serial.begin(115200);
   //Serial.println("Color View Test!");
     Wire.setPins(17,16);
@@ -28,7 +74,7 @@ void setup() {
     //Serial.println("Found sensor");
   } else {
     Serial.println("No TCS34725 found ... check your connections");
-    while (1); // halt!
+    // while (1); // halt!
   }
 
   // use these three pins to drive an LED
@@ -60,6 +106,15 @@ void setup() {
     }
     //Serial.println(gammatable[i]);
   }
+  printSpeeds();
+  a.setSpeed(-50);
+  b.setSpeed(20);
+  c.setSpeed(500);
+  printSpeeds();
+  c.setSpeed(0.5);
+  b.setSpeed(0.3);
+  printSpeeds();
+  delay(100000);
 }
 
 // The commented out code in loop is example of getRawData with clear value.
