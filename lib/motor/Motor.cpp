@@ -5,6 +5,8 @@ Motor::Motor(int pin1, int pin2) {
     _pin2 = pin2;
     pinMode(_pin1, OUTPUT);
     pinMode(_pin2, OUTPUT);
+    digitalWrite(_pin1, LOW);
+    digitalWrite(_pin2, LOW);
 }
 
 void Motor::setSpeed(int speed) {
