@@ -1,12 +1,15 @@
 #include "Sensors.h"
 
-Adafruit_TCS34725 Sensors::color1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_614MS, TCS34725_GAIN_1X); 
-Adafruit_TCS34725 Sensors::color2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_614MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 Sensors::color1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X); 
+Adafruit_TCS34725 Sensors::color2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_1X);
 Adafruit_VL53L0X Sensors::lidar = Adafruit_VL53L0X();
+MeassurementResult Sensors::result;
+uint32_t Sensors::delay;
+uint64_t Sensors::lastMeassurement;
 
 void Sensors::init() {
     initColor();
-    initLidar();
+    // initLidar();
 }
 
 void Sensors::initColor() {
@@ -53,55 +56,68 @@ void Sensors::initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda, int1
     }
 }
 
-void Sensors::printColorValues() {
-    uint16_t r1, g1, b1, c1, colorTemp1, lux1, r2, g2, b2, c2, colorTemp2, lux2;
-
-    color1.getRawData(&r1, &g1, &b1, &c1);
-    color2.getRawData(&r2, &g2, &b2, &c2);
+MeassurementResult Sensors::getColorValues(bool print) {
+    if(millis()-lastMeassurement<delay)
+        return result;
+    color1.getRawDataDirect(&result.color1.r, &result.color1.g, &result.color1.b, &result.color1.c);
+    delay = color2.getRawDataDirect(&result.color2.r, &result.color2.g, &result.color2.b, &result.color2.c);
+    lastMeassurement = millis();
 
     // colorTemp = tcs.calculateColorTemperature(r, g, b);
     // colorTemp = tcs.calculateColorTemperature_dn40(r, g, b, c);
-    lux1 = color1.calculateLux(r1, g1, b1);
-    lux2 = color2.calculateLux(r2, g2, b2);
+    result.color1.lux = color1.calculateLux(result.color1.r, result.color1.g, result.color1.b);
+    result.color2.lux = color2.calculateLux(result.color2.r, result.color2.g, result.color2.b);
 
-    Serial.print("Color 1: ");
-    Serial.print("Color Temp: "); Serial.print(colorTemp1, DEC); Serial.print(" K - ");
-    Serial.print("Lux: "); Serial.print(lux1, DEC); Serial.print(" - ");
-    Serial.print("R: "); Serial.print(r1, DEC); Serial.print(" ");
-    Serial.print("G: "); Serial.print(g1, DEC); Serial.print(" ");
-    Serial.print("B: "); Serial.print(b1, DEC); Serial.print(" ");
-    Serial.print("C: "); Serial.print(c1, DEC); Serial.print(" ");
-    Serial.print("\t");
-    
-    Serial.print("Color 2: ");
-    Serial.print("Color Temp: "); Serial.print(colorTemp2, DEC); Serial.print(" K - ");
-    Serial.print("Lux: "); Serial.print(lux2, DEC); Serial.print(" - ");
-    Serial.print("R: "); Serial.print(r2, DEC); Serial.print(" ");
-    Serial.print("G: "); Serial.print(g2, DEC); Serial.print(" ");
-    Serial.print("B: "); Serial.print(b2, DEC); Serial.print(" ");
-    Serial.print("C: "); Serial.print(c2, DEC); Serial.print(" ");
-    Serial.print("\t");
-    
-    Serial.print("Difference: ");
-    Serial.print("Color Temp: "); Serial.print(colorTemp2-colorTemp1, DEC); Serial.print(" K - ");
-    Serial.print("Lux: "); Serial.print(lux2-lux1, DEC); Serial.print(" - ");
-    Serial.print("R: "); Serial.print(r2-r1, DEC); Serial.print(" ");
-    Serial.print("G: "); Serial.print(g2-g1, DEC); Serial.print(" ");
-    Serial.print("B: "); Serial.print(b2-b1, DEC); Serial.print(" ");
-    Serial.print("C: "); Serial.print(c2-c1, DEC); Serial.print(" ");
-    Serial.println();
+    result.difference.r = result.color1.r-result.color2.r;
+    result.difference.g = result.color1.g-result.color2.g;
+    result.difference.b = result.color1.b-result.color2.b;
+    result.difference.c = result.color1.c-result.color2.c;
+    result.difference.lux = result.color1.lux-result.color2.lux;
+    result.difference.colorTemp = result.color1.colorTemp-result.color2.colorTemp;
+
+    if(DEBUG_COLOR && print) {
+        Serial.print("Color 1: ");
+        // Serial.print("Color Temp: "); Serial.print(result.color.colorTemp, DEC); Serial.print(" K - ");
+        Serial.print("Lux: "); Serial.print(result.color1.lux, DEC); Serial.print(" - ");
+        Serial.print("R: "); Serial.print(result.color1.r, DEC); Serial.print(" ");
+        Serial.print("G: "); Serial.print(result.color1.g, DEC); Serial.print(" ");
+        Serial.print("B: "); Serial.print(result.color1.b, DEC); Serial.print(" ");
+        Serial.print("C: "); Serial.print(result.color1.c, DEC); Serial.print(" ");
+        Serial.print("\t");
+        
+        Serial.print("Color 2: ");
+        // Serial.print("Color Temp: "); Serial.print(result.color2.colorTemp, DEC); Serial.print(" K - ");
+        Serial.print("Lux: "); Serial.print(result.color2.lux, DEC); Serial.print(" - ");
+        Serial.print("R: "); Serial.print(result.color2.r, DEC); Serial.print(" ");
+        Serial.print("G: "); Serial.print(result.color2.g, DEC); Serial.print(" ");
+        Serial.print("B: "); Serial.print(result.color2.b, DEC); Serial.print(" ");
+        Serial.print("C: "); Serial.print(result.color2.c, DEC); Serial.print(" ");
+        Serial.print("\t");
+        
+        Serial.print("Difference: ");
+        // Serial.print("Color Temp: "); Serial.print(result.difference.colorTemp, DEC); Serial.print(" K - ");
+        Serial.print("Lux: "); Serial.print(result.difference.lux, DEC); Serial.print(" - ");
+        Serial.print("R: "); Serial.print(result.difference.r, DEC); Serial.print(" ");
+        Serial.print("G: "); Serial.print(result.difference.g, DEC); Serial.print(" ");
+        Serial.print("B: "); Serial.print(result.difference.b, DEC); Serial.print(" ");
+        Serial.print("C: "); Serial.print(result.difference.c, DEC); Serial.print(" ");
+        Serial.println();
+    }
+
+    return result;
 }
 
-void Sensors::printLidarValues() {
-    VL53L0X_RangingMeasurementData_t measure;
+uint16_t Sensors::getLidarValues(bool print) {
+    VL53L0X_RangingMeasurementData_t meassure;
 
-    lidar.rangingTest(&measure, false);
+    lidar.rangingTest(&meassure, false);
 
-    if(measure.RangeStatus == 4) {
-        if(DEBUG_LIDAR)
+    if(meassure.RangeStatus == 4) {
+        if(DEBUG_LIDAR && print)
             Serial.println(F("Lidar out of range"));
     } else {
-        if(DEBUG_LIDAR)
-            Serial.println("Lidar distance: "+String(measure.RangeMilliMeter)+"mm");
+        if(DEBUG_LIDAR && print)
+            Serial.println("Lidar distance: "+String(meassure.RangeMilliMeter)+"mm");
     }
+    return meassure.RangeMilliMeter;
 }

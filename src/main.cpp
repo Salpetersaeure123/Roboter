@@ -4,6 +4,10 @@
 Motor motor1(18, 19);
 Motor motor2(17, 16);
 
+#define LED_R 23
+#define LED_G 22
+#define LED_B 21
+
 void setup() {
 #if DEBUG
   Serial.begin(115200);
@@ -11,14 +15,59 @@ void setup() {
 
   Sensors::init();
   
-  // motor1.setSpeed(.8);
-  // motor2.setSpeed(.8);
+  motor1.setSpeed(.4);
+  motor2.setSpeed(.4);
+
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
 }
 
+bool correctionleft = false;
+bool correctionright = false;
+
 void loop() {
-  if(DEBUG_COLOR)
-    Sensors::printColorValues();
-  if(DEBUG_LIDAR)
-    Sensors::printLidarValues();
-  delay(1000);
+  MeassurementResult result;
+  result = Sensors::getColorValues(true);
+  // Sensors::getLidarValues(true);
+  result.color2.lux-=4;
+  if(result.color1.lux<60&&!correctionright) {
+    motor1.setSpeed(0);
+    digitalWrite(LED_R, 1);
+    correctionleft = true;
+    // delay(1000);
+  } else {
+    digitalWrite(LED_R, 0);
+    motor1.setSpeed(.4);
+    correctionleft = false;
+  }
+  if(result.color2.lux<60&&!correctionleft) {
+    motor2.setSpeed(0);
+    digitalWrite(LED_B, 1);
+    correctionright = true;
+    // delay(1000);
+  } else {
+    motor2.setSpeed(.4);
+    digitalWrite(LED_B, 0);
+    correctionright = false;
+  }
+  // result.difference.lux+= 17;
+  // if(abs(result.difference.lux)>27&&!(result.color1.lux>100&&result.color2.lux>100)) {
+  //   if(correction)
+  //     return;
+  //   (result.difference.lux>0?motor1:motor2).setSpeed(0.55);
+  //   correction = true;
+  //   digitalWrite(result.difference.lux>0?LED_R:LED_B, 1);
+  //   digitalWrite(result.difference.lux>0?LED_B:LED_R, 0);
+  //   digitalWrite(LED_G, 0);
+  // } else {
+  //   if(result.color1.lux<100)
+  //     return;
+  //   motor1.setSpeed(0.4);
+  //   motor2.setSpeed(0.4);
+  //   correction = false;
+  //   digitalWrite(LED_R, 0);
+  //   digitalWrite(LED_B, 0);
+  //   digitalWrite(LED_G, 1);
+  // }
 }

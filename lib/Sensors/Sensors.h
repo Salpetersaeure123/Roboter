@@ -6,17 +6,33 @@
 #include "../Definies.h"
 #include "Arduino.h"
 
+struct Meassurement {
+    uint16_t r, g, b, c, colorTemp, lux;
+};
+
+struct MeassurementDiff {
+    int16_t r, g, b, c, colorTemp, lux;
+};
+
+struct MeassurementResult {
+    Meassurement color1, color2;
+    MeassurementDiff difference;
+};
+
 class Sensors {
 
 public:
     static void init();
 
-    static void printColorValues();
-    static void printLidarValues();
+    static MeassurementResult getColorValues(bool print = false);
+    static uint16_t getLidarValues(bool print = false);
 
 private:
     static Adafruit_TCS34725 color1, color2;
     static Adafruit_VL53L0X lidar;
+    static MeassurementResult result;
+    static uint32_t delay;
+    static uint64_t lastMeassurement;
 
     static void initColor();
     static void initLidar();

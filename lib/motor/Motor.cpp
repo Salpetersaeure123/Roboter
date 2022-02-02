@@ -11,7 +11,7 @@ Motor::Motor(int pin1, int pin2) {
 
 void Motor::setSpeed(int speed) {
     _speed = abs(min(speed, 255));
-    _direction = speed > 0;
+    _direction = speed >= 0;
     digitalWrite(_direction ? _pin1 : _pin2, 0);
     analogWrite(_direction ? _pin2 : _pin1, _speed);
 }
