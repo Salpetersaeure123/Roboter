@@ -1,78 +1,110 @@
 #include "Motor.h"
-#include "Sensors.h"
+//#include "Sensors.h"
+#include "SR04.h"
 
 Motor motor1(18, 19);
 Motor motor2(17, 16);
 
-#define LED_R 23
-#define LED_G 22
-#define LED_B 21
+//#define LED_R 23
+//#define LED_G 22
+//#define LED_B 21
 
 #define LINE_MODE 0
 #define ULTRASCHALL_MODE 1
 #define MODE ULTRASCHALL_MODE
 
-void setup() {
-#if DEBUG
+#define echo 33
+#define trigger 32
+SR04 ultraschall = SR04(echo, trigger);
+long distance;
+
+void setup()
+{
+//#if DEBUG
   Serial.begin(115200);
+//#endif
+
+//#if MODE == LINE_MODE
+  //Sensors::init();
+#if MODE == ULTRASCHALL_MODE
+  // Ultraschall setup siehe oben
+  Serial.println("ultraschall setup done");
 #endif
 
-#if MODE == LINE_MODE
-  Sensors::init();
-#elif MODE == ULTRASCHALL_MODE
-  //setup ultraschall
-#endif
-  
   motor1.setSpeed(.4);
   motor2.setSpeed(.4);
 
-  pinMode(LED_R, OUTPUT);
-  pinMode(LED_G, OUTPUT);
-  pinMode(LED_B, OUTPUT);
+  //pinMode(LED_R, OUTPUT);
+  //pinMode(LED_G, OUTPUT);
+  //pinMode(LED_B, OUTPUT);
 }
 
 bool correctionleft = false;
 bool correctionright = false;
 
-void lineLoop();
+//void lineLoop();
 void ultraSchallLoop();
 
-void loop() {
-  #if MODE == LINE_MODE
+void loop()
+{
+#if MODE == LINE_MODE
   lineLoop();
-  #elif MODE == ULTRASCHALL_MODE
+#elif MODE == ULTRASCHALL_MODE
   ultraSchallLoop();
-  #endif
+  Serial.println("will execute ultraSchallLoop");
+#endif
 }
 
-void ultraSchallLoop() {
-  //loop ultraschall
+void ultraSchallLoop()
+{
+  //Serial.println("executing ultraSchallLoop");
+  distance = ultraschall.Distance();
+  if (distance <= 50)
+  {
+    //stopp
+    motor1.setSpeed(0);
+    motor2.setSpeed(0);
+    while (distance <= 50)
+    {
+      distance = ultraschall.Distance();
+    }
+    motor1.setSpeed(150);
+    motor2.setSpeed(150);
+  }
 }
 
-void lineLoop() {
+/*void lineLoop()
+{
   MeassurementResult result;
   result = Sensors::getColorValues(false);
   // Sensors::getLidarValues(true);
-  if(result.color1.lux<1&&!correctionright) {
+  if (result.color1.lux < 1 && !correctionright)
+  {
     motor1.setSpeed(-0.4);
     motor2.setSpeed(0.4);
-    digitalWrite(LED_R, 1);
+    //digitalWrite(LED_R, 1);
     correctionleft = true;
-  } else {
-    digitalWrite(LED_R, 0);
+  }
+  else
+  {
+    //digitalWrite(LED_R, 0);
     motor1.setSpeed(0.58);
     correctionleft = false;
   }
-  if(result.color2.lux<1&&!correctionleft) {
+  if (result.color2.lux < 1 && !correctionleft)
+  {
     motor2.setSpeed(-0.4);
     motor1.setSpeed(0.4);
-    digitalWrite(LED_B, 1);
+    //digitalWrite(LED_B, 1);
     correctionright = true;
-  } else {
+  }
+  else
+  {
     motor2.setSpeed(0.58);
-    digitalWrite(LED_B, 0);
+    //digitalWrite(LED_B, 0);
     correctionright = false;
   }
+  */
   // Serial.print(motor1.getDirection());
   // Serial.print("\t");
   // Serial.print(motor1.getSpeed());
@@ -99,4 +131,4 @@ void lineLoop() {
   //   digitalWrite(LED_B, 0);
   //   digitalWrite(LED_G, 1);
   // }
-}
+//}
