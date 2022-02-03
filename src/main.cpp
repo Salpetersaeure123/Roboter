@@ -8,12 +8,20 @@ Motor motor2(17, 16);
 #define LED_G 22
 #define LED_B 21
 
+#define LINE_MODE 0
+#define ULTRASCHALL_MODE 1
+#define MODE ULTRASCHALL_MODE
+
 void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
 
+#if MODE == LINE_MODE
   Sensors::init();
+#elif MODE == ULTRASCHALL_MODE
+  //setup ultraschall
+#endif
   
   motor1.setSpeed(.4);
   motor2.setSpeed(.4);
@@ -26,31 +34,52 @@ void setup() {
 bool correctionleft = false;
 bool correctionright = false;
 
+void lineLoop();
+void ultraSchallLoop();
+
 void loop() {
+  #if MODE == LINE_MODE
+  lineLoop();
+  #elif MODE == ULTRASCHALL_MODE
+  ultraSchallLoop();
+  #endif
+}
+
+void ultraSchallLoop() {
+  //loop ultraschall
+}
+
+void lineLoop() {
   MeassurementResult result;
-  result = Sensors::getColorValues(true);
+  result = Sensors::getColorValues(false);
   // Sensors::getLidarValues(true);
-  result.color2.lux-=4;
-  if(result.color1.lux<60&&!correctionright) {
-    motor1.setSpeed(0);
+  if(result.color1.lux<1&&!correctionright) {
+    motor1.setSpeed(-0.4);
+    motor2.setSpeed(0.4);
     digitalWrite(LED_R, 1);
     correctionleft = true;
-    // delay(1000);
   } else {
     digitalWrite(LED_R, 0);
-    motor1.setSpeed(.4);
+    motor1.setSpeed(0.58);
     correctionleft = false;
   }
-  if(result.color2.lux<60&&!correctionleft) {
-    motor2.setSpeed(0);
+  if(result.color2.lux<1&&!correctionleft) {
+    motor2.setSpeed(-0.4);
+    motor1.setSpeed(0.4);
     digitalWrite(LED_B, 1);
     correctionright = true;
-    // delay(1000);
   } else {
-    motor2.setSpeed(.4);
+    motor2.setSpeed(0.58);
     digitalWrite(LED_B, 0);
     correctionright = false;
   }
+  // Serial.print(motor1.getDirection());
+  // Serial.print("\t");
+  // Serial.print(motor1.getSpeed());
+  // Serial.print("\t2:");
+  // Serial.print(motor2.getDirection());
+  // Serial.print("\t");
+  // Serial.println(motor2.getSpeed());
   // result.difference.lux+= 17;
   // if(abs(result.difference.lux)>27&&!(result.color1.lux>100&&result.color2.lux>100)) {
   //   if(correction)
