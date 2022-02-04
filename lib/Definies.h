@@ -14,8 +14,8 @@
 #define SDA_2           25
 #define SCL_2           26
 
-#define SCHALL_TRIG     32
-#define SCHALL_ECHO     33
+#define SONIC_TRIG      32
+#define SONIC_ECHO      33
 
 
 //Settings
