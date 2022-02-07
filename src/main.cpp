@@ -3,8 +3,8 @@
 #include "SR04.h"
 #include "RemoteControl.h"
 
-Motor motor1(18, 19);
-Motor motor2(17, 16);
+Motor motor1(18, 19); // = left
+Motor motor2(17, 16); // = right
 
 #define LED_R 23
 #define LED_G 22
@@ -13,7 +13,7 @@ Motor motor2(17, 16);
 #define LINE_MODE 0
 #define ULTRASONIC_MODE 1
 #define REMOTE_MODE 2
-#define MODE REMOTE_MODE
+#define MODE LINE_MODE
 
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
@@ -32,8 +32,8 @@ void setup() {
   RemoteControl::setup();
 #endif
 
-  motor1.setSpeed(.4);
-  motor2.setSpeed(.4);
+  motor1.setSpeed(0.4);
+  motor2.setSpeed(0.4);
 
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
@@ -43,6 +43,8 @@ void setup() {
 bool correctionleft = false;
 bool correctionright = false;
 
+void halfTurn();
+void fullTurn();
 void lineLoop();
 void ultrasonicLoop();
 
@@ -51,49 +53,66 @@ void loop() {
   lineLoop();
 #elif MODE == ULTRASONIC_MODE
   ultrasonicLoop();
-  Serial.println("will execute ultrasonicLoop");
 #endif
 }
 
+void fullTurn() {
+  //does a 360° turn
+  motor1.setSpeed(-0.42);
+  motor2.setSpeed(0.33);
+  delay(2500);
+  motor1.setSpeed(0.0);
+  motor2.setSpeed(0.0);
+}
+
+void halfTurn() {
+  //does a 180° turn
+  motor1.setSpeed(-0.42);
+  motor2.setSpeed(0.33);
+  delay(1250);
+}
+
 void ultrasonicLoop() {
-  //Serial.println("executing ultrasonicLoop");
   distance = ultrasonic.Distance();
-  if (distance <= 50) {
-    //stop
-    motor1.setSpeed(0);
-    motor2.setSpeed(0);
-    while (distance <= 50)
-    {
-      distance = ultrasonic.Distance();
-    }
-    motor1.setSpeed(150);
-    motor2.setSpeed(150);
+  if(distance < 20) {
+    halfTurn();
   }
+  // only for tests
 }
 
 void lineLoop() {
   MeassurementResult result;
   result = Sensors::getColorValues(false);
   // Sensors::getLidarValues(true);
+
   if (result.color1.lux < 1 && !correctionright) {
-    motor1.setSpeed(-0.4);
-    motor2.setSpeed(0.4);
-    digitalWrite(LED_R, 1);
+    motor1.setSpeed(-0.40);
+    motor2.setSpeed(0.35);
+    //digitalWrite(LED_R, 1);
     correctionleft = true;
-  } else {
-    digitalWrite(LED_R, 0);
-    motor1.setSpeed(0.58);
+  }
+  else {
+    //digitalWrite(LED_R, 0);
+    motor1.setSpeed(0.45);
     correctionleft = false;
   }
+
   if (result.color2.lux < 1 && !correctionleft) {
-    motor2.setSpeed(-0.4);
-    motor1.setSpeed(0.4);
-    digitalWrite(LED_B, 1);
+    motor2.setSpeed(-0.35);
+    motor1.setSpeed(0.40);
+    //digitalWrite(LED_B, 1);
     correctionright = true;
-  } else {
-    motor2.setSpeed(0.58);
-    digitalWrite(LED_B, 0);
+  }
+  else {
+    motor2.setSpeed(0.40);
+    //digitalWrite(LED_B, 0);
     correctionright = false;
+  }
+  if(!correctionleft && !correctionright) {
+    distance = ultrasonic.Distance();
+    if(distance <= 15) {
+      halfTurn();
+    }
   }
   
   // Serial.print(motor1.getDirection());
