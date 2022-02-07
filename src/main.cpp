@@ -1,6 +1,7 @@
 #include "Motor.h"
 #include "Sensors.h"
 #include "SR04.h"
+#include "RemoteControl.h"
 
 Motor motor1(18, 19);
 Motor motor2(17, 16);
@@ -10,8 +11,9 @@ Motor motor2(17, 16);
 #define LED_B 21
 
 #define LINE_MODE 0
-#define ultrasonic_MODE 1
-#define MODE ultrasonic_MODE
+#define ULTRASONIC_MODE 1
+#define REMOTE_MODE 2
+#define MODE REMOTE_MODE
 
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
@@ -23,9 +25,11 @@ void setup() {
 
 #if MODE == LINE_MODE
   Sensors::init();
-#elif MODE == ultrasonic_MODE
+#elif MODE == ULTRASONIC_MODE
   // ultrasonic setup siehe oben
   Serial.println("ultrasonic setup done");
+#elif MODE == REMOTE_MODE
+  RemoteControl::setup();
 #endif
 
   motor1.setSpeed(.4);
@@ -39,13 +43,13 @@ void setup() {
 bool correctionleft = false;
 bool correctionright = false;
 
-//void lineLoop();
+void lineLoop();
 void ultrasonicLoop();
 
 void loop() {
 #if MODE == LINE_MODE
   lineLoop();
-#elif MODE == ultrasonic_MODE
+#elif MODE == ULTRASONIC_MODE
   ultrasonicLoop();
   Serial.println("will execute ultrasonicLoop");
 #endif
@@ -71,28 +75,22 @@ void lineLoop() {
   MeassurementResult result;
   result = Sensors::getColorValues(false);
   // Sensors::getLidarValues(true);
-  if (result.color1.lux < 1 && !correctionright)
-  {
+  if (result.color1.lux < 1 && !correctionright) {
     motor1.setSpeed(-0.4);
     motor2.setSpeed(0.4);
     digitalWrite(LED_R, 1);
     correctionleft = true;
-  }
-  else
-  {
+  } else {
     digitalWrite(LED_R, 0);
     motor1.setSpeed(0.58);
     correctionleft = false;
   }
-  if (result.color2.lux < 1 && !correctionleft)
-  {
+  if (result.color2.lux < 1 && !correctionleft) {
     motor2.setSpeed(-0.4);
     motor1.setSpeed(0.4);
     digitalWrite(LED_B, 1);
     correctionright = true;
-  }
-  else
-  {
+  } else {
     motor2.setSpeed(0.58);
     digitalWrite(LED_B, 0);
     correctionright = false;
