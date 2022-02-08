@@ -10,10 +10,13 @@ Motor motor2(17, 16); // = right
 #define LED_G 22
 #define LED_B 21
 
-#define LINE_MODE 0
-#define ULTRASONIC_MODE 1
-#define REMOTE_MODE 2
-#define MODE LINE_MODE
+enum Mode {
+  LINE,
+  ULTRASONIC,
+  REMOTE
+};
+
+Mode mode = LINE;
 
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
@@ -23,14 +26,10 @@ void setup() {
   Serial.begin(115200);
 #endif
 
-#if MODE == LINE_MODE
   Sensors::init();
-#elif MODE == ULTRASONIC_MODE
   // ultrasonic setup siehe oben
   Serial.println("ultrasonic setup done");
-#elif MODE == REMOTE_MODE
   RemoteControl::setup();
-#endif
 
   motor1.setSpeed(0.4);
   motor2.setSpeed(0.4);
@@ -49,11 +48,11 @@ void lineLoop();
 void ultrasonicLoop();
 
 void loop() {
-#if MODE == LINE_MODE
-  lineLoop();
-#elif MODE == ULTRASONIC_MODE
-  ultrasonicLoop();
-#endif
+  switch(mode) {
+    case LINE: lineLoop(); break;
+    case ULTRASONIC: ultrasonicLoop(); break;
+    case REMOTE: RemoteControl::loop(); break;
+  }
 }
 
 void fullTurn() {
