@@ -36,8 +36,8 @@ void setup() {
   Serial.println("ultrasonic setup done");
   RemoteControl::setup();
 
-  motor1.setSpeed(0.4);
-  motor2.setSpeed(0.4);
+  motor1.setSpeed(0.45);
+  motor2.setSpeed(0.40);
 
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
