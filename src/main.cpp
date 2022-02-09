@@ -18,6 +18,11 @@ enum Mode {
 
 Mode mode = LINE;
 
+int fourDistances [4] {
+
+};
+int direction;
+
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
 
@@ -42,6 +47,7 @@ void setup() {
 bool correctionleft = false;
 bool correctionright = false;
 
+void quarterTurn();
 void halfTurn();
 void fullTurn();
 void lineLoop();
@@ -71,12 +77,57 @@ void halfTurn() {
   delay(1250);
 }
 
+void quarterTurn() {
+  //does a 90° turn
+  motor1.setSpeed(-0.42);
+  motor2.setSpeed(0.33);
+  delay(625);
+}
+
 void ultrasonicLoop() {
   distance = ultrasonic.Distance();
-  if(distance < 20) {
-    halfTurn();
+  if(distance < 150) {
+    for(int c=0; c<=3; c=c+1) {
+      distance = ultrasonic.Distance();
+      fourDistances [c] = distance;
+      quarterTurn();
+    }
+
+    if(fourDistances[0] > fourDistances[1]) {
+      if(fourDistances[0] > fourDistances[2]) {
+        if(fourDistances[0] > fourDistances[3]) {
+          direction = 0;
+        }
+      }
+    }
+    if(fourDistances[1] > fourDistances[0]) {
+      if(fourDistances[1] > fourDistances[2]) {
+        if(fourDistances[1] > fourDistances[3]) {
+          direction = 1;
+        }
+      }
+    }
+    if(fourDistances[2] > fourDistances[0]) {
+      if(fourDistances[2] > fourDistances[1]) {
+        if(fourDistances[2] > fourDistances[3]) {
+          direction = 2;
+        }
+      }
+    }
+    if(fourDistances[3] > fourDistances[0]) {
+      if(fourDistances[3] > fourDistances[1]) {
+        if(fourDistances[3] > fourDistances[2]) {
+          direction = 3;
+        }
+      }
+    }
+
+    for(int c=0; c < direction; c=c+1) {
+      quarterTurn();
+    }
+    motor1.setSpeed(0.45);
+    motor2.setSpeed(0.40);
   }
-  // only for tests
 }
 
 void lineLoop() {
