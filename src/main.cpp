@@ -4,7 +4,12 @@
 #include "RemoteControl.h"
 
 Motor motor1(18, 19); // = left
+#define normalSpeed1 0.44
+
 Motor motor2(17, 16); // = right
+#define normalSpeed2 0.40
+
+#define off 0.00
 
 #define LED_R 23
 #define LED_G 22
@@ -16,7 +21,7 @@ enum Mode {
   REMOTE
 };
 
-Mode mode = LINE;
+Mode mode = ULTRASONIC;
 
 int fourDistances [4] {
 
@@ -31,13 +36,13 @@ void setup() {
   Serial.begin(115200);
 #endif
 
-  Sensors::init();
+  //Sensors::init();
   // ultrasonic setup siehe oben
-  Serial.println("ultrasonic setup done");
-  RemoteControl::setup();
+  //Serial.println("ultrasonic setup done");
+  //RemoteControl::setup();
 
-  motor1.setSpeed(0.45);
-  motor2.setSpeed(0.40);
+  motor1.setSpeed(normalSpeed1);
+  motor2.setSpeed(normalSpeed2);
 
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
@@ -66,8 +71,6 @@ void fullTurn() {
   motor1.setSpeed(-0.42);
   motor2.setSpeed(0.33);
   delay(2500);
-  motor1.setSpeed(0.0);
-  motor2.setSpeed(0.0);
 }
 
 void halfTurn() {
@@ -86,47 +89,57 @@ void quarterTurn() {
 
 void ultrasonicLoop() {
   distance = ultrasonic.Distance();
-  if(distance < 150) {
-    for(int c=0; c<=3; c=c+1) {
-      distance = ultrasonic.Distance();
-      fourDistances [c] = distance;
-      quarterTurn();
-    }
+  if(distance < 100) {
+    distance = ultrasonic.Distance();
+    if(distance < 100) {
+      for(int c=0; c<=3; c=c+1) {
+        motor1.setSpeed(off);
+        motor2.setSpeed(off);
+        delay(250);
+        distance = ultrasonic.Distance();
+        fourDistances [c] = distance;
+        quarterTurn();
+      }
 
-    if(fourDistances[0] > fourDistances[1]) {
-      if(fourDistances[0] > fourDistances[2]) {
-        if(fourDistances[0] > fourDistances[3]) {
-          direction = 0;
+      if(fourDistances[0] > fourDistances[1]) {
+        if(fourDistances[0] > fourDistances[2]) {
+          if(fourDistances[0] > fourDistances[3]) {
+            direction = 0;
+          }
         }
       }
-    }
-    if(fourDistances[1] > fourDistances[0]) {
-      if(fourDistances[1] > fourDistances[2]) {
-        if(fourDistances[1] > fourDistances[3]) {
-          direction = 1;
+      if(fourDistances[1] > fourDistances[0]) {
+        if(fourDistances[1] > fourDistances[2]) {
+          if(fourDistances[1] > fourDistances[3]) {
+            direction = 1;
+          }
         }
       }
-    }
-    if(fourDistances[2] > fourDistances[0]) {
-      if(fourDistances[2] > fourDistances[1]) {
-        if(fourDistances[2] > fourDistances[3]) {
-          direction = 2;
+      if(fourDistances[2] > fourDistances[0]) {
+        if(fourDistances[2] > fourDistances[1]) {
+          if(fourDistances[2] > fourDistances[3]) {
+            direction = 2;
+          }
         }
       }
-    }
-    if(fourDistances[3] > fourDistances[0]) {
-      if(fourDistances[3] > fourDistances[1]) {
-        if(fourDistances[3] > fourDistances[2]) {
-          direction = 3;
+      if(fourDistances[3] > fourDistances[0]) {
+        if(fourDistances[3] > fourDistances[1]) {
+          if(fourDistances[3] > fourDistances[2]) {
+            direction = 3;
+          }
         }
       }
-    }
 
-    for(int c=0; c < direction; c=c+1) {
-      quarterTurn();
+      for(int c=0; c < direction; c=c+1) {
+        quarterTurn();
+      }
+      motor1.setSpeed(normalSpeed1);
+      motor2.setSpeed(normalSpeed2);
     }
-    motor1.setSpeed(0.45);
-    motor2.setSpeed(0.40);
+  }
+  else {
+    motor1.setSpeed(normalSpeed1);
+    motor2.setSpeed(normalSpeed2);
   }
 }
 
@@ -143,7 +156,7 @@ void lineLoop() {
   }
   else {
     //digitalWrite(LED_R, 0);
-    motor1.setSpeed(0.45);
+    motor1.setSpeed(normalSpeed1);
     correctionleft = false;
   }
 
@@ -154,7 +167,7 @@ void lineLoop() {
     correctionright = true;
   }
   else {
-    motor2.setSpeed(0.40);
+    motor2.setSpeed(normalSpeed2);
     //digitalWrite(LED_B, 0);
     correctionright = false;
   }
@@ -184,8 +197,8 @@ void lineLoop() {
   // } else {
   //   if(result.color1.lux<100)
   //     return;
-  //   motor1.setSpeed(0.4);
-  //   motor2.setSpeed(0.4);
+  //   motor1.setSpeed(normalSpeed1);
+  //   motor2.setSpeed(normalSPeed2);
   //   correction = false;
   //   digitalWrite(LED_R, 0);
   //   digitalWrite(LED_B, 0);
