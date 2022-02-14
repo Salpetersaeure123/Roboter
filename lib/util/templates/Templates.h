@@ -31,4 +31,6 @@ int sizeOf(T* (&array)) {
   return (sizeof(array)/sizeof(T));
 }
 
+#define MAP(x, inMin, inMax, outMin, outMax) ((x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin)
+
 #endif

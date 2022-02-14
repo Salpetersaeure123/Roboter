@@ -19,7 +19,7 @@
 
 
 //Settings
-#define FORCE_INIT_COLOR    true
+#define FORCE_INIT_COLOR    false
 #define FORCE_INIT_LIDAR    false
 
 //Debug

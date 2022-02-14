@@ -3,20 +3,9 @@
 #include "SR04.h"
 #include "RemoteControl.h"
 
-Motor motor1(18, 19); // = left
-Motor motor2(17, 16); // = right
-
 #define LED_R 23
 #define LED_G 22
 #define LED_B 21
-
-enum Mode {
-  LINE,
-  ULTRASONIC,
-  REMOTE
-};
-
-Mode mode = LINE;
 
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
@@ -26,7 +15,7 @@ void setup() {
   Serial.begin(115200);
 #endif
 
-  Sensors::init();
+  // Sensors::init();
   // ultrasonic setup siehe oben
   Serial.println("ultrasonic setup done");
   RemoteControl::setup();
@@ -48,7 +37,10 @@ void lineLoop();
 void ultrasonicLoop();
 
 void loop() {
-  switch(mode) {
+  RemoteControl::loop();
+  // lineLoop();
+  return;
+  switch(RemoteControl::getMode()) {
     case LINE: lineLoop(); break;
     case ULTRASONIC: ultrasonicLoop(); break;
     case REMOTE: RemoteControl::loop(); break;
@@ -107,12 +99,12 @@ void lineLoop() {
     //digitalWrite(LED_B, 0);
     correctionright = false;
   }
-  if(!correctionleft && !correctionright) {
-    distance = ultrasonic.Distance();
-    if(distance <= 15) {
-      halfTurn();
-    }
-  }
+  // if(!correctionleft && !correctionright) {
+  //   distance = ultrasonic.Distance();
+  //   if(distance <= 15) {
+  //     halfTurn();
+  //   }
+  // }
   
   // Serial.print(motor1.getDirection());
   // Serial.print("\t");

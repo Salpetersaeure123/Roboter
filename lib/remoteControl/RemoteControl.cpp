@@ -1,8 +1,14 @@
 #include "RemoteControl.h"
 
-const char* RemoteControl::ssid = "NetFrame";  //replace
-const char* RemoteControl::password =  "87934hzft9oeu4389nv8o437893hf978"; //replace
+
+Motor motor1(18, 19); // = left
+Motor motor2(17, 16); // = right
+
+Mode RemoteControl::mode = LINE;
+const char* RemoteControl::ssid = "JCBS-Schüler";//"NetFrame";  //replace
+const char* RemoteControl::password =  "K1,14DWwFuwuu.";//"87934hzft9oeu4389nv8o437893hf978"; //replace
 ESP32WebServer RemoteControl::server(80);
+int RemoteControl::speed = 0;
 
 bool testState = false;
 
@@ -19,6 +25,9 @@ void RemoteControl::setup() {
     //Wenn der Server angewiesen wird das Servlet mit der Bezeichnung "greeting" bereitzustellen
     //so wird die Funktion "callGreeting" aufgerufen.
     server.on("/greeting", callGreeting);
+    server.on("/direction", setDirection);
+    server.on("/speed", setSpeed);
+    server.on("/mode", setMode);
         
     server.begin(); // Starten des Servers.
     Serial.println("Server gestartet"); //Ausgabe auf der Seriellen Schnittstelle das der Server gestartet wurde.
@@ -35,11 +44,104 @@ void RemoteControl::loop() {
     //Hier wird keine Pause eingelegt da dieses sonst die Verarbeitung stören würde.
 }
 
+Mode RemoteControl::getMode() {
+    return mode;
+}
+
+void RemoteControl::setDirection() {
+    // sendResult("{\"msg\": \"Direction changed\"}");
+    int angle = 0;
+    int strength = 0;
+    int speed = 0;
+    for (int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("angle")) {
+            std::string s = server.arg(i).c_str();
+            std::stringstream intValue(s);
+            intValue >> angle;            
+        } else if(server.argName(i).equals("strength")) {
+            std::string s = server.arg(i).c_str();
+            std::stringstream intValue(s);
+            intValue >> strength;            
+        } else if(server.argName(i).equals("speed")) {
+            std::string s = server.arg(i).c_str();
+            std::stringstream intValue(s);
+            intValue >> speed;            
+        }
+    int a = (180-angle%180)*PI/180;
+    int x = (angle==0?-1:1)*strength;//cos(a)*strength;
+    int y = sin(a)*strength;
+    // Serial.print(speed);
+    if(speed != 0)
+        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 100, 255);
+    double _speed = 0;
+    double _speed2 = 0;
+    if(speed == 0) {
+        if(abs(x)>20) {
+            _speed = map(abs(x), 20, 100, 100, 150)/255.;
+            _speed2 = -_speed;
+        }
+    } else {
+         double v = 1-abs(cos(a)*strength/100.);
+        _speed = speed/255.;
+        if(abs(_speed) < 0.4)
+            _speed = 0.;
+        _speed2 = v*_speed;
+        _speed2 = (_speed2<0?_speed2/abs(_speed2):1)*MAP(abs(_speed2), 0., abs(_speed), .39, abs(_speed));
+        if(abs(_speed2) < 0.4)
+            _speed2 = 0.;
+    }
+    // Serial.print(x/abs(x));
+    // Serial.s;    
+    if(x>0) {
+        motor1.setSpeed(_speed2);
+        motor2.setSpeed(_speed);
+    } else {
+        motor1.setSpeed(_speed);
+        motor2.setSpeed(_speed2);
+    }
+    // Serial.print(" Motor 1: ");
+    // Serial.print(motor1.getSpeed());
+    // Serial.print(" Motor 2: ");
+    // Serial.println(motor2.getSpeed());
+    // Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
+    sendResult("{\"msg\": \"Direction changed\"}");
+}
+
+void RemoteControl::setSpeed() {
+    // sendResult("{\"msg\": \"Speed changed\"}");
+    for (int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("strength")) {
+            std::string s = server.arg(i).c_str();
+            std::stringstream intValue(s);
+            intValue >> speed;
+            speed=map(speed, 0, 100, 100, 255);           
+        }
+    Serial.print("speed: ");
+    Serial.println(speed);
+    //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
+    sendResult("{\"msg\": \"Speed changed\"}");
+}
+
+void RemoteControl::setMode() {
+    for (int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("mode")) {
+            std::string s = server.arg(0).c_str();
+            std::stringstream intValue(s);
+            int value = 0;
+            intValue >> value;
+            mode = (Mode) value;
+            Serial.println(mode);
+        }
+    //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
+    sendResult("{\"msg\": \"Mode set to "+String(mode)+"\"}");
+}
+
 void RemoteControl::callGreeting() {
     //Eine Variable zum speichern des gelesenen Wertes. 
     String text = "-undefined-";
     //Über alle möglichen Parameter iterieren.
     for (int i = 0; i < server.args(); i++) {
+
         //Zuweisen der Schlüssel/Wertepaare
         String parameterName = server.argName(i);
         String parameterValue = server.arg(i);
@@ -50,7 +152,7 @@ void RemoteControl::callGreeting() {
         } 
     }
     //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
-    sendResult("{\"msg\": \"Hello from ESP8266!- "+text+"\"}");
+    sendResult("{\"msg\": \"Hello from ESP32!- "+text+"\"}");
  }
 
 //Diese Funktion sendet eine Antwort an den Client.
