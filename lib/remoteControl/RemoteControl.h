@@ -9,6 +9,7 @@
 #include "Util.h"
 
 enum Mode {
+  NONE = -1,
   LINE = 0,
   ULTRASONIC = 1,
   REMOTE = 2
@@ -20,8 +21,10 @@ extern Motor motor2;
 class RemoteControl {
     public:
         static void setup();
-        static void loop();
+        static void loop(void*);
         static Mode getMode();
+
+       static bool correction;
 
     private:
         static Mode mode;

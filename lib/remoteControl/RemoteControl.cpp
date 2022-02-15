@@ -4,23 +4,27 @@
 Motor motor1(18, 19); // = left
 Motor motor2(17, 16); // = right
 
-Mode RemoteControl::mode = LINE;
-const char* RemoteControl::ssid = "JCBS-Schüler";//"NetFrame";  //replace
-const char* RemoteControl::password =  "K1,14DWwFuwuu.";//"87934hzft9oeu4389nv8o437893hf978"; //replace
+Mode RemoteControl::mode = NONE;
+const char* RemoteControl::ssid = "ESP-Bot"; ///*"JCBS-Schüler";*/"NetFrame";  //replace
+const char* RemoteControl::password = "1234"; // /*"K1,14DWwFuwuu.";+*/"87934hzft9oeu4389nv8o437893hf978"; //replace
 ESP32WebServer RemoteControl::server(80);
 int RemoteControl::speed = 0;
+bool RemoteControl::correction = false;
 
 bool testState = false;
 
 void RemoteControl::setup() {
     //WIFI connection
-    WiFi.begin(ssid, password);
+    /*WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
         Serial.println("Connecting to WiFi..");
     }
-    Serial.println(WiFi.localIP());
- 
+    Serial.println(WiFi.localIP());*/
+    WiFi.softAP(ssid, password);
+
+    Serial.println(WiFi.softAPIP());
+
     //Server
     //Wenn der Server angewiesen wird das Servlet mit der Bezeichnung "greeting" bereitzustellen
     //so wird die Funktion "callGreeting" aufgerufen.
@@ -36,12 +40,16 @@ void RemoteControl::setup() {
     Serial.print("Adresse : http://");
     Serial.print(WiFi.localIP());
     Serial.println("/");
+
+    xTaskCreatePinnedToCore(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL, 1);
 }
  
-void RemoteControl::loop() {  
-    //alle Anfragen der Clients verarbeiten.
-    server.handleClient();
-    //Hier wird keine Pause eingelegt da dieses sonst die Verarbeitung stören würde.
+void RemoteControl::loop(void*) {  
+    for(;;) {
+        //alle Anfragen der Clients verarbeiten.
+        server.handleClient();
+        //Hier wird keine Pause eingelegt da dieses sonst die Verarbeitung stören würde.
+    }
 }
 
 Mode RemoteControl::getMode() {
@@ -49,6 +57,8 @@ Mode RemoteControl::getMode() {
 }
 
 void RemoteControl::setDirection() {
+    if(mode != REMOTE || correction)
+        return;
     // sendResult("{\"msg\": \"Direction changed\"}");
     int angle = 0;
     int strength = 0;
@@ -68,7 +78,7 @@ void RemoteControl::setDirection() {
             intValue >> speed;            
         }
     int a = (180-angle%180)*PI/180;
-    int x = (angle==0?-1:1)*strength;//cos(a)*strength;
+    int x = /*(angle==0?-1:1)*strength;*/cos(a)*strength;
     int y = sin(a)*strength;
     // Serial.print(speed);
     if(speed != 0)

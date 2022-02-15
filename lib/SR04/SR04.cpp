@@ -12,6 +12,7 @@ SR04::SR04(int echoPin, int triggerPin) {
 
 
 long SR04::Distance() {
+    delay(25);
     long d = 0;
     _duration = 0;
     digitalWrite(_triggerPin, LOW);
@@ -22,7 +23,6 @@ long SR04::Distance() {
     delayMicroseconds(2);
     _duration = pulseIn(_echoPin, HIGH, PULSE_TIMEOUT);
     d = MicrosecondsToCentimeter(_duration);
-    delay(25);
     return d;
 }
 
