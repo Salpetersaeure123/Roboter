@@ -5,8 +5,8 @@ Motor motor1(18, 19); // = left
 Motor motor2(17, 16); // = right
 
 Mode RemoteControl::mode = NONE;
-const char* RemoteControl::ssid = "ESP-Bot"; ///*"JCBS-Schüler";*/"NetFrame";  //replace
-const char* RemoteControl::password = "1234"; // /*"K1,14DWwFuwuu.";+*/"87934hzft9oeu4389nv8o437893hf978"; //replace
+const char* RemoteControl::ssid[3] = {"ESP-Bot", "JCBS-Schüler", "NetFrame"};
+const char* RemoteControl::password[3] = {"12345678", "K1,14DWwFuwuu.", "87934hzft9oeu4389nv8o437893hf978"};
 ESP32WebServer RemoteControl::server(80);
 int RemoteControl::speed = 0;
 bool RemoteControl::correction = false;
@@ -15,15 +15,23 @@ bool testState = false;
 
 void RemoteControl::setup() {
     //WIFI connection
-    /*WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi..");
+    for(int i = 1; i < sizeOf(ssid); i++) {
+        WiFi.begin(ssid[i%sizeOf(ssid)], password[i%sizeOf(password)]);
+        for(int j = 0; j < 3; j++) {
+            Serial.println("Connecting to "+String(ssid[i])+"...");
+            delay(1000);
+            if(WiFi.status() == WL_CONNECTED)
+                break;
+        }
+        if(WiFi.status() == WL_CONNECTED)
+            break;
     }
-    Serial.println(WiFi.localIP());*/
-    WiFi.softAP(ssid, password);
-
-    Serial.println(WiFi.softAPIP());
+    if(WiFi.status() == WL_CONNECTED)
+        Serial.println(WiFi.localIP());
+    else {
+        WiFi.softAP(ssid[0], password[0]);
+        Serial.println(WiFi.softAPIP());
+    }
 
     //Server
     //Wenn der Server angewiesen wird das Servlet mit der Bezeichnung "greeting" bereitzustellen
@@ -35,11 +43,6 @@ void RemoteControl::setup() {
         
     server.begin(); // Starten des Servers.
     Serial.println("Server gestartet"); //Ausgabe auf der Seriellen Schnittstelle das der Server gestartet wurde.
-    
-    // Ausgabe der IP Adresse 
-    Serial.print("Adresse : http://");
-    Serial.print(WiFi.localIP());
-    Serial.println("/");
 
     xTaskCreatePinnedToCore(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL, 1);
 }
@@ -57,9 +60,10 @@ Mode RemoteControl::getMode() {
 }
 
 void RemoteControl::setDirection() {
-    if(mode != REMOTE || correction)
+    if(mode != REMOTE || correction) {
+        sendResult("{\"msg\": \"Direction not changed\"}");
         return;
-    // sendResult("{\"msg\": \"Direction changed\"}");
+    }
     int angle = 0;
     int strength = 0;
     int speed = 0;

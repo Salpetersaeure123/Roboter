@@ -2,6 +2,7 @@
 #include "Sensors.h"
 #include "SR04.h"
 #include "RemoteControl.h"
+#include "Arduino.h"
 
 #define normalSpeed1 0.50
 #define normalSpeed2 0.45
@@ -18,18 +19,23 @@ int direction;
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
 
+void hupe();
+
 void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
+ledcAttachPin(13, 0);
 
-  Sensors::init();
+  // Sensors::init();
   // ultrasonic setup siehe oben
   //Serial.println("ultrasonic setup done");
   // RemoteControl::setup();
 
   // motor1.setSpeed(normalSpeed1);
   // motor2.setSpeed(normalSpeed2);
+
+  hupe();
 }
 
 bool correctionleft = false;
@@ -43,7 +49,8 @@ void ultrasonicLoop();
 void ultrasonicLoop2();
 
 void loop() {
-  ultrasonicLoop2();
+  hupe();
+  //ultrasonicLoop2();
   return;
   switch(RemoteControl::getMode()) {
     case LINE: lineLoop(); break;
@@ -216,6 +223,7 @@ void ultrasonicLoop() {
 }
 
 void lineLoop() {
+  Serial.println("line");
   MeassurementResult result;
   result = Sensors::getColorValues(false);
   // Sensors::getLidarValues(true);
@@ -276,4 +284,17 @@ void lineLoop() {
   //   digitalWrite(LED_B, 0);
   //   digitalWrite(LED_G, 1);
   // }
+}
+
+void hupe() {
+  // for(int i = 1000; i < 5000; i+=100) {
+  //   ledcSetup(0, i, 8);
+  //   ledcWrite(0, 127);
+  //   Serial.println(i);
+  //   delay(500);
+  // }
+  ledcWriteNote(0, NOTE_G, 4);
+  delay(1000);
+  ledcWrite(0, 0);
+  delay(3000);
 }
