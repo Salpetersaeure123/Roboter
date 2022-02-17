@@ -1,8 +1,8 @@
 #include "RemoteControl.h"
 
 
-Motor motor1(18, 19); // = left
-Motor motor2(17, 16); // = right
+Motor motor1(18, 19, 27); // = left
+Motor motor2(17, 16, 14); // = right
 
 Mode RemoteControl::mode = NONE;
 const char* RemoteControl::ssid[3] = {"ESP-Bot", "JCBS-Schüler", "NetFrame"};

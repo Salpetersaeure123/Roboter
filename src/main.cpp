@@ -25,9 +25,10 @@ void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
-ledcAttachPin(13, 0);
+  ledcSetup(0, 20000, 8);
+  ledcAttachPin(13, 0);
 
-  // Sensors::init();
+  Sensors::init();
   // ultrasonic setup siehe oben
   //Serial.println("ultrasonic setup done");
   // RemoteControl::setup();
@@ -35,7 +36,7 @@ ledcAttachPin(13, 0);
   // motor1.setSpeed(normalSpeed1);
   // motor2.setSpeed(normalSpeed2);
 
-  hupe();
+  // hupe();
 }
 
 bool correctionleft = false;
@@ -50,8 +51,10 @@ void ultrasonicLoop2();
 
 void loop() {
   hupe();
+  motor1.setSpeed(.7);
+  motor2.setSpeed(.7);
   //ultrasonicLoop2();
-  return;
+  // return;
   switch(RemoteControl::getMode()) {
     case LINE: lineLoop(); break;
     case ULTRASONIC: ultrasonicLoop(); break;
@@ -287,14 +290,13 @@ void lineLoop() {
 }
 
 void hupe() {
-  // for(int i = 1000; i < 5000; i+=100) {
-  //   ledcSetup(0, i, 8);
-  //   ledcWrite(0, 127);
-  //   Serial.println(i);
-  //   delay(500);
-  // }
-  ledcWriteNote(0, NOTE_G, 4);
+    ledcWrite(0, 255);
+    delayMicroseconds(1250);
+    ledcWrite(0, 0);
+    delayMicroseconds(1250);
+    //Serial.println(i);
+  /*ledcWriteNote(0, NOTE_G, 4);
   delay(1000);
   ledcWrite(0, 0);
-  delay(3000);
+  delay(3000);*/
 }
