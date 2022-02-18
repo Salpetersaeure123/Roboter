@@ -8,8 +8,8 @@
 #define MOTOR_RH        16
 
 #define I2C_1           Wire
-#define SDA_1           27
-#define SCL_1           14
+#define SDA_1           -1
+#define SCL_1           -1
 #define I2C_2           Wire1
 #define SDA_2           25
 #define SCL_2           26

@@ -13,12 +13,12 @@ void Sensors::init() {
 }
 
 void Sensors::initColor() {
-    initTCS(color1, I2C_1, SDA_1, SCL_1);
-    initTCS(color2, I2C_2, SDA_2, SCL_2);
+    initTCS(color1, I2C_2, SDA_2, SCL_2);
+    initTCS(color2, I2C_1, SDA_1, SCL_1);
 }
 
 void Sensors::initLidar() {
-    if(!Wire.begin(SDA_1, SCL_1)) {
+    if(!Wire1.begin(SDA_2, SCL_2)) {
         if(DEBUG_LIDAR) {
             Serial.print(F("I2C Connection failed.\t"));
             Serial.print(F("retry: ")); Serial.println(F(FORCE_INIT_LIDAR?"true":"false"));

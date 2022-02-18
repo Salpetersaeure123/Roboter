@@ -28,10 +28,17 @@ void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
+
 ledcSetup(0, 100000, 8);
 ledcAttachPin(13, 0);
   // Sensors::init();
   // RemoteControl::setup();
+
+  Sensors::init();
+  // RemoteControl::setup();
+
+  // hupe();
+
 }
 
 bool correctionleft = false;
@@ -56,8 +63,10 @@ void loop() {
     }
   }*/
   hupe();
+  motor1.setSpeed(.7);
+  motor2.setSpeed(.7);
   //ultrasonicLoop2();
-  return;
+  // return;
   switch(RemoteControl::getMode()) {
     case LINE: lineLoop(); break;
     case ULTRASONIC: ultrasonicLoop(); break;
