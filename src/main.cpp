@@ -9,7 +9,10 @@
 #define speed1 0.45
 #define speed2 0.40
 
-#define off 0.00
+#define off 0
+#define on 255
+#define half 127
+float d = 1.5;
 
 int fourDistances [4] {
 
@@ -19,28 +22,23 @@ int direction;
 SR04 ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 long distance;
 
-void hupe();
+
 
 void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
+ledcSetup(0, 100000, 8);
 ledcAttachPin(13, 0);
-
   // Sensors::init();
-  // ultrasonic setup siehe oben
-  //Serial.println("ultrasonic setup done");
   // RemoteControl::setup();
-
-  // motor1.setSpeed(normalSpeed1);
-  // motor2.setSpeed(normalSpeed2);
-
-  hupe();
 }
 
 bool correctionleft = false;
 bool correctionright = false;
 
+void hupe();
+void signalton();
 void quarterTurn();
 void halfTurn();
 void fullTurn();
@@ -49,6 +47,14 @@ void ultrasonicLoop();
 void ultrasonicLoop2();
 
 void loop() {
+  /*for(d=2; d >= 0.4; d = d-0.1) {
+    long us1 = micros();
+    long us2 = micros();
+    while(us2 < us1+500000) {
+      hupe();
+      us2 = micros();
+    }
+  }*/
   hupe();
   //ultrasonicLoop2();
   return;
@@ -73,7 +79,6 @@ void fullTurn() {
   motor2.setSpeed(speed2);
   delay(2200);
 }
-
 void halfTurn() {
   //does a 180° turn
   motor1.setSpeed(-speed1);
@@ -82,7 +87,6 @@ void halfTurn() {
   motor1.setSpeed(0);
   motor2.setSpeed(0);
 }
-
 void quarterTurn() {
   //does a 90° turn
   motor1.setSpeed(-speed1);
@@ -117,7 +121,7 @@ void ultrasonicLoop2() {
           return;
         }
       }
-      Serial.println("höchster wert wiederfinden");
+      Serial.println("höchsten wert wiederfinden");
       long new_highest_distance = 0;
       while(true) {
         startTime = millis();
@@ -286,15 +290,44 @@ void lineLoop() {
   // }
 }
 
+void signalton() {
+  //this generates one period of the loudest possible sound
+  ledcWrite(0, on);
+  delayMicroseconds(106);
+  ledcWrite(0, off);
+  delayMicroseconds(106);
+}
+
 void hupe() {
-  // for(int i = 1000; i < 5000; i+=100) {
-  //   ledcSetup(0, i, 8);
-  //   ledcWrite(0, 127);
-  //   Serial.println(i);
-  //   delay(500);
-  // }
-  ledcWriteNote(0, NOTE_G, 4);
-  delay(1000);
-  ledcWrite(0, 0);
-  delay(3000);
+  // this generates one period of two tones simoultaneously
+  ledcWrite(0, on);
+  delayMicroseconds(930*d);
+  ledcWrite(0, half);
+  delayMicroseconds(230*d);
+  ledcWrite(0, off);
+  delayMicroseconds(680*d);
+  ledcWrite(0, half);
+  delayMicroseconds(450*d);
+  ledcWrite(0, on);
+  delayMicroseconds(440*d);
+  ledcWrite(0, half);
+  delayMicroseconds(680*d);
+  ledcWrite(0, off);
+  delayMicroseconds(230*d);
+  ledcWrite(0, half);
+  delayMicroseconds(1810*d);
+  ledcWrite(0, on);
+  delayMicroseconds(230*d);
+  ledcWrite(0, half);
+  delayMicroseconds(680*d);
+  ledcWrite(0, off);
+  delayMicroseconds(440*d);
+  ledcWrite(0, half);
+  delayMicroseconds(450*d);
+  ledcWrite(0, on);
+  delayMicroseconds(680*d);
+  ledcWrite(0, half);
+  delayMicroseconds(230*d);
+  ledcWrite(0, off);
+  delayMicroseconds(930*d);
 }
