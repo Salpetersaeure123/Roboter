@@ -1,15 +1,17 @@
 #include "RemoteControl.h"
 #include "Line.h"
 #include "Ultrasonic.h"
-#include "Piezo.h"
+#include "Speaker.h"
+
+long us1; long us2;
 
 void setup() {
 #if DEBUG
   Serial.begin(115200);
 #endif
-  Piezo::setup();
-  Sensors::init();
-  RemoteControl::setup();
+  Speaker::setup();
+  //Sensors::init();
+  // RemoteControl::setup();
   pinMode(BACK_LIGHT_L, OUTPUT);
   pinMode(BACK_LIGHT_R, OUTPUT);
   digitalWrite(BACK_LIGHT_L, HIGH);
@@ -32,10 +34,22 @@ void loop() {
   // analogWrite(BACK_LIGHT_R, 255);
   // Motor::setSpeeds(1.);
   // return;
-  switch(RemoteControl::getMode()) {
+  /*switch(RemoteControl::getMode()) {
     case LINE: Line::loop(); break;
     case ULTRASONIC: Ultrasonic::loop(); break;
     case REMOTE: break;
     default: break;
+  }*/
+  /*for(double d =2.00; d>= 0.20; d=d-0.10) {
+    us1=micros();
+    while(micros() < us1 + 200000) {
+      Speaker::hupe(d);
+    }
+  }*/
+  us1 = micros();
+  while(micros() < us1 + 1500000) {
+      Speaker::hupe(0.7);
   }
+  delay(2000);
+  // Speaker::signal();
 }

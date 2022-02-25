@@ -1,12 +1,13 @@
-#ifndef PIEZO_H
-#define PIEZO_H
+#ifndef SPEAKER_H
+#define SPEAKER_H
 
 #include "Arduino.h"
+#include "../Definies.h"
 
-class Piezo {
+class Speaker {
     public:
         static void setup();
-        static void hupe();
+        static void hupe(double d);
         static void signal();
 
     private:

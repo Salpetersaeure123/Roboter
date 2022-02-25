@@ -9,7 +9,7 @@
 #define MOTOR_RH        16
 #define MOTOR_RS        4
 
-#define PIEZO_PIN       13
+#define SPEAKER_PIN       2
 
 #define I2C_1           Wire
 #define SDA_1           -1
@@ -21,9 +21,10 @@
 #define SONIC_TRIG      32
 #define SONIC_ECHO      33
 
-#define BACK_LIGHT_L    2
-#define BACK_LIGHT_R    15
-#define FRONT_LIGHT     
+#define BACK_LIGHT_R    13
+#define BACK_LIGHT_L    14
+#define FRONT_LIGHT     27
+#define LASER           12
 
 //Settings
 #define ACTIVE_COLOR        true
