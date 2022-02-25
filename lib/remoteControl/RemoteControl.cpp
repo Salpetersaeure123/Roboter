@@ -1,12 +1,8 @@
 #include "RemoteControl.h"
 
-
-Motor motor1(18, 19, 27); // = left
-Motor motor2(17, 16, 14); // = right
-
 Mode RemoteControl::mode = NONE;
-const char* RemoteControl::ssid[3] = {"ESP-Bot", "JCBS-Schüler", "NetFrame"};
-const char* RemoteControl::password[3] = {"12345678", "K1,14DWwFuwuu.", "87934hzft9oeu4389nv8o437893hf978"};
+const char* RemoteControl::ssid[4] = {"ESP-Bot", "JCBS-Schüler", "ESP32", "NetFrame"};
+const char* RemoteControl::password[4] = {"12345678", "K1,14DWwFuwuu.", "12345678", "87934hzft9oeu4389nv8o437893hf978"};
 ESP32WebServer RemoteControl::server(80);
 int RemoteControl::speed = 0;
 bool RemoteControl::correction = false;
@@ -17,7 +13,7 @@ void RemoteControl::setup() {
     //WIFI connection
     for(int i = 1; i < sizeOf(ssid); i++) {
         WiFi.begin(ssid[i%sizeOf(ssid)], password[i%sizeOf(password)]);
-        for(int j = 0; j < 3; j++) {
+        for(int j = 0; j < 5; j++) {
             Serial.println("Connecting to "+String(ssid[i])+"...");
             delay(1000);
             if(WiFi.status() == WL_CONNECTED)
@@ -44,7 +40,7 @@ void RemoteControl::setup() {
     server.begin(); // Starten des Servers.
     Serial.println("Server gestartet"); //Ausgabe auf der Seriellen Schnittstelle das der Server gestartet wurde.
 
-    xTaskCreatePinnedToCore(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL, 1);
+    xTaskCreate(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL);
 }
  
 void RemoteControl::loop(void*) {  
@@ -86,7 +82,7 @@ void RemoteControl::setDirection() {
     int y = sin(a)*strength;
     // Serial.print(speed);
     if(speed != 0)
-        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 100, 255);
+        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 60, 255);
     double _speed = 0;
     double _speed2 = 0;
     if(speed == 0) {

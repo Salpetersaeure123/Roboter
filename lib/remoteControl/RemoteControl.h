@@ -15,9 +15,6 @@ enum Mode {
   REMOTE = 2
 };
 
-extern Motor motor1;
-extern Motor motor2;
-
 class RemoteControl {
     public:
         static void setup();
@@ -28,8 +25,8 @@ class RemoteControl {
 
     private:
         static Mode mode;
-        static const char* ssid[3];
-        static const char* password[3];
+        static const char* ssid[4];
+        static const char* password[4];
         static ESP32WebServer server;
         static int speed;
 

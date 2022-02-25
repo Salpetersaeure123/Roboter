@@ -3,18 +3,22 @@
 Adafruit_TCS34725 Sensors::color1 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X); 
 Adafruit_TCS34725 Sensors::color2 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X);
 Adafruit_VL53L0X Sensors::lidar = Adafruit_VL53L0X();
+SR04 Sensors::ultrasonic = SR04(SONIC_ECHO, SONIC_TRIG);
 MeassurementResult Sensors::result;
+boolean Sensors::color1Connected;
+boolean Sensors::color2Connected;
+boolean Sensors::lidarConnected;
 uint32_t Sensors::delay;
 uint64_t Sensors::lastMeassurement;
 
 void Sensors::init() {
     initColor();
-    // initLidar();
+    initLidar();
 }
 
 void Sensors::initColor() {
-    initTCS(color1, I2C_2, SDA_2, SCL_2);
-    initTCS(color2, I2C_1, SDA_1, SCL_1);
+    color1Connected = initTCS(color1, I2C_2, SDA_2, SCL_2);
+    color2Connected = initTCS(color2, I2C_1, SDA_1, SCL_1);
 }
 
 void Sensors::initLidar() {
@@ -23,23 +27,26 @@ void Sensors::initLidar() {
             Serial.print(F("I2C Connection failed.\t"));
             Serial.print(F("retry: ")); Serial.println(F(FORCE_INIT_LIDAR?"true":"false"));
         }
-    while(FORCE_INIT_LIDAR&&!Wire.begin(SDA_1, SCL_1));
+    while(FORCE_INIT_LIDAR&&!Wire1.begin(SDA_2, SCL_2));
     }
-    if (!lidar.begin()) {
+    bool initSuccessfull = true;
+    if (!lidar.begin(41U, false, &Wire1)) {
         if(DEBUG_LIDAR) {
         Serial.print(F("Failed to boot VL53L0X.\t"));
         Serial.print(F("retry: ")); Serial.println(F(FORCE_INIT_LIDAR?"true":"false"));
         }
+        initSuccessfull = false;
         while(FORCE_INIT_LIDAR&&!lidar.begin());
     }
     if(lidar.Status!=-5)
         lidar.setMeasurementTimingBudgetMicroSeconds(10000);
+    lidarConnected = initSuccessfull||FORCE_INIT_LIDAR;
     if(DEBUG_LIDAR) {
         Serial.print(F("Adafruit VL53L0X init ")); Serial.println(F(lidar.Status!=-5?"successfull":"failed"));
     }
 }
 
-void Sensors::initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda, int16_t scl) {
+bool Sensors::initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda, int16_t scl) {
     if(sda != -1 && scl != -1)
         i2c.setPins(sda, scl);
     bool initSuccessfull = true;
@@ -54,9 +61,14 @@ void Sensors::initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda, int1
     if(DEBUG_COLOR) {
         Serial.print(F("Adafruit TCS34725 init ")); Serial.println(F(initSuccessfull||FORCE_INIT_COLOR?"successfull":"failed"));
     }
+    return initSuccessfull||FORCE_INIT_COLOR;
 }
 
 MeassurementResult Sensors::getColorValues(bool print) {
+    if(!ACTIVE_COLOR)
+        return result;
+    if(!color1Connected||!color2Connected)
+        return result;
     if(millis()-lastMeassurement<delay)
         return result;
     color1.getRawDataDirect(&result.color1.r, &result.color1.g, &result.color1.b, &result.color1.c);
@@ -108,8 +120,11 @@ MeassurementResult Sensors::getColorValues(bool print) {
 }
 
 uint16_t Sensors::getLidarValues(bool print) {
+    if(!ACTIVE_LIDAR)
+        return -1;
+    if(!lidarConnected)
+        return -1;
     VL53L0X_RangingMeasurementData_t meassure;
-
     lidar.rangingTest(&meassure, false);
 
     if(meassure.RangeStatus == 4) {
@@ -120,4 +135,13 @@ uint16_t Sensors::getLidarValues(bool print) {
             Serial.println("Lidar distance: "+String(meassure.RangeMilliMeter)+"mm");
     }
     return meassure.RangeMilliMeter;
+}
+
+int64_t Sensors::getUltrasonicValues(bool print) {
+    if(!ACTIVE_ULTRASONIC)
+        return -1;
+    long distance = ultrasonic.Distance();
+    if(DEBUG_ULTRASONIC && print)
+        Serial.println("Ultrasonic distance: "+String(distance)+"cm");
+    return distance;
 }

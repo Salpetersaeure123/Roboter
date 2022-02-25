@@ -5,6 +5,7 @@
 #include "Adafruit_VL53L0X.h"
 #include "../Definies.h"
 #include "Arduino.h"
+#include "SR04.h"
 
 struct Meassurement {
     uint16_t r, g, b, c, colorTemp, lux;
@@ -26,18 +27,23 @@ public:
 
     static MeassurementResult getColorValues(bool print = false);
     static uint16_t getLidarValues(bool print = false);
+    static int64_t getUltrasonicValues(bool print = false);
 
 private:
     static Adafruit_TCS34725 color1, color2;
     static Adafruit_VL53L0X lidar;
+    static SR04 ultrasonic;
     static MeassurementResult result;
+    static boolean color1Connected;
+    static boolean color2Connected;
+    static boolean lidarConnected;
     static uint32_t delay;
     static uint64_t lastMeassurement;
 
     static void initColor();
     static void initLidar();
 
-    static void initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda=-1, int16_t scl=-1);
+    static bool initTCS(Adafruit_TCS34725& sensor, TwoWire& i2c, int16_t sda=-1, int16_t scl=-1);
 
 };
 
