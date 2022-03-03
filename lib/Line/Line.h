@@ -4,6 +4,8 @@
 #include "Arduino.h"
 #include "Sensors.h"
 #include "Motor.h"
+#include "Light.h"
+#include "SafeMode.h"
 
 class Line {
     public:

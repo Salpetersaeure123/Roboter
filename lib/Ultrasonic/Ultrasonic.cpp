@@ -1,8 +1,8 @@
 #include "Ultrasonic.h"
 
 #define SPEED_OFF       0
-#define SPEED_DRIVE     0.8
-#define SPEED_ROTATE    0.5
+#define SPEED_DRIVE     0.4
+#define SPEED_ROTATE    0.24
 
 int Ultrasonic::fourDistances[4] = {};
 int Ultrasonic::direction = 0;
@@ -73,9 +73,9 @@ void Ultrasonic::loop() {
 
 void Ultrasonic::loop2() {
   distance = Sensors::getUltrasonicValues();
-  if(distance < 15) {
+  if(distance < 25) {
     distance = Sensors::getUltrasonicValues();
-    if(distance < 15) {
+    if(distance < 25) {
       Serial.println("ausweichen");
       long highest_distance = 0;
       unsigned long startTime = millis();
@@ -92,7 +92,7 @@ void Ultrasonic::loop2() {
           motor1.setSpeed(SPEED_ROTATE);
           motor2.setSpeed(-SPEED_ROTATE);
         }
-        if(distance>200) {
+        if(distance>100) {
           motor1.setSpeed(SPEED_DRIVE);
           motor2.setSpeed(SPEED_DRIVE);
           return;
@@ -115,10 +115,10 @@ void Ultrasonic::loop2() {
             motor1.setSpeed(0);
             motor2.setSpeed(0);
             delay(50);
-            motor1.setSpeed(0.42);
-            motor2.setSpeed(-0.40);
+            motor1.setSpeed(SPEED_ROTATE);
+            motor2.setSpeed(-SPEED_ROTATE);
           }
-          if(distance>200) {
+          if(distance>100) {
             motor1.setSpeed(SPEED_DRIVE);
             motor2.setSpeed(SPEED_DRIVE);
             return;
@@ -128,12 +128,9 @@ void Ultrasonic::loop2() {
         new_highest_distance = 0;
       }
     }
-  } else if(distance > 300 && distance < 500) {
-    motor1.setSpeed(0.7);
-    motor2.setSpeed(0.7);
-  } else if(distance > 500) {
-    motor1.setSpeed(1.);
-    motor2.setSpeed(1.);
+  } else if(distance > 100) {
+    motor1.setSpeed(.7);
+    motor2.setSpeed(.7);
   } else {
     motor1.setSpeed(SPEED_DRIVE);
     motor2.setSpeed(SPEED_DRIVE);

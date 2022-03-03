@@ -13,12 +13,12 @@ uint64_t Sensors::lastMeassurement;
 
 void Sensors::init() {
     initColor();
-    initLidar();
+    // initLidar();
 }
 
 void Sensors::initColor() {
-    color1Connected = initTCS(color1, I2C_2, SDA_2, SCL_2);
-    color2Connected = initTCS(color2, I2C_1, SDA_1, SCL_1);
+    color1Connected = initTCS(color1, I2C_1, SDA_1, SCL_1);
+    color2Connected = initTCS(color2, I2C_2, SDA_2, SCL_2);
 }
 
 void Sensors::initLidar() {
@@ -30,7 +30,7 @@ void Sensors::initLidar() {
     while(FORCE_INIT_LIDAR&&!Wire1.begin(SDA_2, SCL_2));
     }
     bool initSuccessfull = true;
-    if (!lidar.begin(41U, false, &Wire1)) {
+    if (!lidar.begin(41U, true, &Wire1)) {
         if(DEBUG_LIDAR) {
         Serial.print(F("Failed to boot VL53L0X.\t"));
         Serial.print(F("retry: ")); Serial.println(F(FORCE_INIT_LIDAR?"true":"false"));
@@ -69,12 +69,15 @@ MeassurementResult Sensors::getColorValues(bool print) {
         return result;
     if(!color1Connected||!color2Connected)
         return result;
-    if(millis()-lastMeassurement<delay)
-        return result;
+    // if(millis()-lastMeassurement<delay)
+    //     return result;
+    // while(millis()-lastMeassurement<delay) {
+    //     vTaskDelay(1/portTICK_PERIOD_MS);
+    // }
     color1.getRawDataDirect(&result.color1.r, &result.color1.g, &result.color1.b, &result.color1.c);
-    delay = color2.getRawDataDirect(&result.color2.r, &result.color2.g, &result.color2.b, &result.color2.c);
-    lastMeassurement = millis();
-
+    color2.getRawDataDirect(&result.color2.r, &result.color2.g, &result.color2.b, &result.color2.c);
+    // lastMeassurement = millis();
+    	
     // colorTemp = tcs.calculateColorTemperature(r, g, b);
     // colorTemp = tcs.calculateColorTemperature_dn40(r, g, b, c);
     result.color1.lux = color1.calculateLux(result.color1.r, result.color1.g, result.color1.b);

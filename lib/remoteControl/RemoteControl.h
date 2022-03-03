@@ -7,6 +7,9 @@
 #include "sstream"
 #include "Motor.h"
 #include "Util.h"
+#include "Speaker.h"
+#include "Light.h"
+#include "SafeMode.h"
 
 enum Mode {
   NONE = -1,
@@ -19,6 +22,7 @@ class RemoteControl {
     public:
         static void setup();
         static void loop(void*);
+
         static Mode getMode();
 
        static bool correction;
@@ -29,11 +33,16 @@ class RemoteControl {
         static const char* password[4];
         static ESP32WebServer server;
         static int speed;
+        static unsigned long lastReqeust;
 
-        static void callGreeting();
         static void setDirection();
         static void setSpeed();
         static void setMode();
+        static void setSafeMode();
+        static void setHupe();
+        static void setLightMode();
+        static void setLaser();
+
         static void sendResult(String content);
 
 };

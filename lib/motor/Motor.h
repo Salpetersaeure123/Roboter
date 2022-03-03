@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "analogWrite.h"
 #include "../Definies.h"
+#include "Speaker.h"
 
 class Motor;
 

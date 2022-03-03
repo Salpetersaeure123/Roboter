@@ -1,7 +1,7 @@
 #include "Motor.h"
 
-#define ROTATION_SPEED      0.5
-#define ROTATION_DURATION   2200
+#define ROTATION_SPEED      0.3
+#define ROTATION_DURATION   1700
 
 Motor motor1(MOTOR_LV, MOTOR_LH, MOTOR_LS); // = left
 Motor motor2(MOTOR_RV, MOTOR_RH, MOTOR_RS); // = rights
@@ -72,7 +72,7 @@ void Motor::fullTurn(bool left) {
   //does a 360° turn
   motor1.setSpeed((left?-1:1)*ROTATION_SPEED);
   motor2.setSpeed((left?1:-1)*ROTATION_SPEED);
-  delay(ROTATION_DURATION);
+  vTaskDelay(ROTATION_DURATION);
   setSpeeds(0);
 }
 
@@ -80,7 +80,11 @@ void Motor::halfTurn(bool left) {
   //does a 180° turn
   motor1.setSpeed((left?-1:1)*ROTATION_SPEED);
   motor2.setSpeed((left?1:-1)*ROTATION_SPEED);
-  delay(ROTATION_DURATION/2);
+  vTaskDelay(ROTATION_DURATION/2);
+//   long start = millis();
+//   while(millis()-start < ROTATION_DURATION/2) {
+//       Speaker::signal();
+//   }
   setSpeeds(0);
 }
 
@@ -88,6 +92,6 @@ void Motor::quarterTurn(bool left) {
   //does a 90° turn
   motor1.setSpeed((left?-1:1)*ROTATION_SPEED);
   motor2.setSpeed((left?1:-1)*ROTATION_SPEED);
-  delay(ROTATION_DURATION/4);
+  vTaskDelay(ROTATION_DURATION/4);
   setSpeeds(0);
 }

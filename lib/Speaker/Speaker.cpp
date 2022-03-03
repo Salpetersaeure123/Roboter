@@ -6,9 +6,8 @@
 
 
 void Speaker::setup() {
-  ledcSetup(0, 100000, 8);
   ledcAttachPin(SPEAKER_PIN, 0);
-  pinMode(SPEAKER_PIN, OUTPUT);
+  ledcSetup(0, 100000, 8);
 }
 
 void Speaker::signal() {

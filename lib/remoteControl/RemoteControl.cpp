@@ -1,17 +1,18 @@
 #include "RemoteControl.h"
 
-Mode RemoteControl::mode = NONE;
-const char* RemoteControl::ssid[4] = {"ESP-Bot", "JCBS-Schüler", "ESP32", "NetFrame"};
-const char* RemoteControl::password[4] = {"12345678", "K1,14DWwFuwuu.", "12345678", "87934hzft9oeu4389nv8o437893hf978"};
+Mode RemoteControl::mode = NONE     ;
+const char* RemoteControl::ssid[4] = {"ESP-Bot", "JCBS-Schüler", "NetFrame", "ESP32"};
+const char* RemoteControl::password[4] = {"12345678", "K1,14DWwFuwuu.", "87934hzft9oeu4389nv8o437893hf978", "12345678"};
 ESP32WebServer RemoteControl::server(80);
 int RemoteControl::speed = 0;
 bool RemoteControl::correction = false;
+xTaskHandle hupTask = NULL;
 
 bool testState = false;
 
 void RemoteControl::setup() {
     //WIFI connection
-    for(int i = 1; i < sizeOf(ssid); i++) {
+    for(int i = 2; i < sizeOf(ssid); i++) {
         WiFi.begin(ssid[i%sizeOf(ssid)], password[i%sizeOf(password)]);
         for(int j = 0; j < 5; j++) {
             Serial.println("Connecting to "+String(ssid[i])+"...");
@@ -30,34 +31,31 @@ void RemoteControl::setup() {
     }
 
     //Server
-    //Wenn der Server angewiesen wird das Servlet mit der Bezeichnung "greeting" bereitzustellen
-    //so wird die Funktion "callGreeting" aufgerufen.
-    server.on("/greeting", callGreeting);
     server.on("/direction", setDirection);
-    server.on("/speed", setSpeed);
     server.on("/mode", setMode);
+    server.on("/hupe", setHupe);
+    server.on("/lightMode", setLightMode);
+    server.on("/safeMode", setSafeMode);
+    server.on("/laser", setLaser);
         
-    server.begin(); // Starten des Servers.
-    Serial.println("Server gestartet"); //Ausgabe auf der Seriellen Schnittstelle das der Server gestartet wurde.
-
+    server.begin();
+    Serial.println("Server starteted");
     xTaskCreate(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL);
 }
  
 void RemoteControl::loop(void*) {  
     for(;;) {
-        //alle Anfragen der Clients verarbeiten.
         server.handleClient();
-        //Hier wird keine Pause eingelegt da dieses sonst die Verarbeitung stören würde.
+        vTaskDelay(5);
     }
 }
 
 Mode RemoteControl::getMode() {
     return mode;
 }
-
 void RemoteControl::setDirection() {
     if(mode != REMOTE || correction) {
-        sendResult("{\"msg\": \"Direction not changed\"}");
+        sendResult("Direction not changed");
         return;
     }
     int angle = 0;
@@ -81,13 +79,17 @@ void RemoteControl::setDirection() {
     int x = /*(angle==0?-1:1)*strength;*/cos(a)*strength;
     int y = sin(a)*strength;
     // Serial.print(speed);
+    if(speed < 0)
+        LightManager::setBremsLight(true);
+    else
+        LightManager::setBremsLight(false);
     if(speed != 0)
-        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 60, 255);
+        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 50, 200);
     double _speed = 0;
     double _speed2 = 0;
     if(speed == 0) {
         if(abs(x)>20) {
-            _speed = map(abs(x), 20, 100, 100, 150)/255.;
+            _speed = map(abs(x), 20, 100, 70, 100)/255.;
             _speed2 = -_speed;
         }
     } else {
@@ -96,7 +98,7 @@ void RemoteControl::setDirection() {
         if(abs(_speed) < 0.4)
             _speed = 0.;
         _speed2 = v*_speed;
-        _speed2 = (_speed2<0?_speed2/abs(_speed2):1)*MAP(abs(_speed2), 0., abs(_speed), .39, abs(_speed));
+        _speed2 = (_speed2<0?_speed2/abs(_speed2):1)*MAP(abs(_speed2), 0., abs(_speed), .3, abs(_speed));
         if(abs(_speed2) < 0.4)
             _speed2 = 0.;
     }
@@ -114,11 +116,11 @@ void RemoteControl::setDirection() {
     // Serial.print(" Motor 2: ");
     // Serial.println(motor2.getSpeed());
     // Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
-    sendResult("{\"msg\": \"Direction changed\"}");
+    sendResult("Direction changed");
 }
 
 void RemoteControl::setSpeed() {
-    // sendResult("{\"msg\": \"Speed changed\"}");
+    // sendResult("Speed changed");
     for (int i = 0; i < server.args(); i++)
         if(server.argName(i).equals("strength")) {
             std::string s = server.arg(i).c_str();
@@ -129,41 +131,89 @@ void RemoteControl::setSpeed() {
     Serial.print("speed: ");
     Serial.println(speed);
     //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
-    sendResult("{\"msg\": \"Speed changed\"}");
+    sendResult("Speed changed");
 }
 
 void RemoteControl::setMode() {
     for (int i = 0; i < server.args(); i++)
         if(server.argName(i).equals("mode")) {
-            std::string s = server.arg(0).c_str();
+            std::string s = server.arg(i).c_str();
             std::stringstream intValue(s);
             int value = 0;
             intValue >> value;
             mode = (Mode) value;
             Serial.println(mode);
+            motor1.setSpeed(0);
+            motor2.setSpeed(0);
+            LightManager::setBremsLight(false);
         }
     //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
-    sendResult("{\"msg\": \"Mode set to "+String(mode)+"\"}");
+    sendResult("Mode set to "+String(mode)+"");
 }
 
-void RemoteControl::callGreeting() {
-    //Eine Variable zum speichern des gelesenen Wertes. 
-    String text = "-undefined-";
-    //Über alle möglichen Parameter iterieren.
-    for (int i = 0; i < server.args(); i++) {
+void RemoteControl::setSafeMode() {
+    for(int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("mode")) {
+            if(server.arg(i).equals("true")) {
+                SafeMode::setSafeMode(true);
+                Serial.println("Safe mode activated");
+            } else if(server.arg(i).equals("false")) {
+                SafeMode::setSafeMode(false);
+                Serial.println("Safe mode deactivated");
+            }
+        }
+    sendResult("Safe Mode changed");
+}
 
-        //Zuweisen der Schlüssel/Wertepaare
-        String parameterName = server.argName(i);
-        String parameterValue = server.arg(i);
-        //Wenn der Parametername gleich "text" ist dann...
-        if(parameterName == "text"){
-            //zuweisen des Wertes zu unserer Variable
-            text = parameterValue;      
-        } 
-    }
-    //Absenden eines JSONS mit einer Begrüßung und unseres gelesenen Textes.
-    sendResult("{\"msg\": \"Hello from ESP32!- "+text+"\"}");
- }
+void RemoteControl::setHupe() {
+    for(int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("value")) {
+            if(server.arg(i).equals("start")) {
+                if(hupTask != NULL)
+                    vTaskDelete(hupTask);
+                xTaskCreate([](void*){for(;;){Speaker::hupe(0.7);}}, "Hup Task", 1024, NULL, 3, &hupTask);
+                Serial.println("Hupe started");
+            } else if(server.arg(i).equals("stop")) {
+                if(hupTask != NULL) {
+                    vTaskDelete(hupTask);
+                    hupTask = NULL;
+                }
+                Serial.println("Hupe stopped");
+            }
+        }
+    sendResult("Hupe changed");
+}
+
+void RemoteControl::setLightMode() {
+    for(int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("mode")) {
+            if(server.arg(i).equals("0")) {
+                LightManager::setLightMode(OFF);
+                Serial.println("Light Mode: off");
+            } else if(server.arg(i).equals("1")) {
+                LightManager::setLightMode(AUTO);
+                Serial.println("Light Mode: auto");
+            } else if(server.arg(i).equals("2")) {
+                LightManager::setLightMode(ON);
+                Serial.println("Light Mode: on");
+            }
+        }
+    sendResult("light mode changed");
+}
+
+void RemoteControl::setLaser() {
+    for(int i = 0; i < server.args(); i++)
+        if(server.argName(i).equals("mode")) {
+            if(server.arg(i).equals("true")) {
+                LightManager::setLaser(true);
+                Serial.println("Laser activated");
+            } else if(server.arg(i).equals("false")) {
+                LightManager::setLaser(false);
+                Serial.println("Laser deactivated");
+            }
+        }
+    sendResult("laser changed");
+}
 
 //Diese Funktion sendet eine Antwort an den Client.
 void RemoteControl::sendResult(String content) {

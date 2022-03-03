@@ -9,7 +9,7 @@
 #define MOTOR_RH        16
 #define MOTOR_RS        4
 
-#define SPEAKER_PIN       2
+#define SPEAKER_PIN     2
 
 #define I2C_1           Wire
 #define SDA_1           -1
@@ -24,12 +24,15 @@
 #define BACK_LIGHT_R    13
 #define BACK_LIGHT_L    14
 #define FRONT_LIGHT     27
+
 #define LASER           12
+
+#define LDR             39
 
 //Settings
 #define ACTIVE_COLOR        true
 #define ACTIVE_LIDAR        true
-#define ACTIVE_ULTRASONIC   false
+#define ACTIVE_ULTRASONIC   true
 
 #define FORCE_INIT_COLOR    false
 #define FORCE_INIT_LIDAR    false
