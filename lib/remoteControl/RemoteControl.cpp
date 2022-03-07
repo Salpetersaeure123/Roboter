@@ -1,9 +1,11 @@
 #include "RemoteControl.h"
 
-Mode RemoteControl::mode = NONE     ;
+Mode RemoteControl::mode = NONE;
 const char* RemoteControl::ssid[4] = {"ESP-Bot", "JCBS-Schüler", "NetFrame", "ESP32"};
-const char* RemoteControl::password[4] = {"12345678", "K1,14DWwFuwuu.", "87934hzft9oeu4389nv8o437893hf978", "12345678"};
+const char* RemoteControl::password[4] = {"12345678", "S1,16DismdEn;deieKG!", "87934hzft9oeu4389nv8o437893hf978", "12345678"};
+const char* RemoteControl::hostname = "ESP32_Bot";
 ESP32WebServer RemoteControl::server(80);
+unsigned long RemoteControl::lastReqeust = UINT32_MAX;
 int RemoteControl::speed = 0;
 bool RemoteControl::correction = false;
 xTaskHandle hupTask = NULL;
@@ -12,7 +14,10 @@ bool testState = false;
 
 void RemoteControl::setup() {
     //WIFI connection
-    for(int i = 2; i < sizeOf(ssid); i++) {
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(hostname);
+    for(int i = 1; i < sizeOf(ssid); i++) {
         WiFi.begin(ssid[i%sizeOf(ssid)], password[i%sizeOf(password)]);
         for(int j = 0; j < 5; j++) {
             Serial.println("Connecting to "+String(ssid[i])+"...");
@@ -43,8 +48,21 @@ void RemoteControl::setup() {
     xTaskCreate(RemoteControl::loop, "remote", 4*1024, NULL, 5, NULL);
 }
  
-void RemoteControl::loop(void*) {  
+void RemoteControl::loop(void*) { 
+    unsigned long lastBlink = 0; 
+    bool blinkState = 0;
     for(;;) {
+        if(lastReqeust == UINT32_MAX || (mode == REMOTE && millis()-lastReqeust > 1000)) {
+            if(lastReqeust != UINT32_MAX) {
+                Motor::setSpeeds(0);
+                lastReqeust = UINT32_MAX;
+            }
+            if(millis()-lastBlink > 1000) {
+                lastBlink = millis();
+                blinkState = !blinkState;
+                LightManager::setBremsLight(blinkState);
+            }
+        }
         server.handleClient();
         vTaskDelay(5);
     }
@@ -58,6 +76,7 @@ void RemoteControl::setDirection() {
         sendResult("Direction not changed");
         return;
     }
+    lastReqeust = millis();
     int angle = 0;
     int strength = 0;
     int speed = 0;
@@ -169,15 +188,17 @@ void RemoteControl::setHupe() {
     for(int i = 0; i < server.args(); i++)
         if(server.argName(i).equals("value")) {
             if(server.arg(i).equals("start")) {
-                if(hupTask != NULL)
-                    vTaskDelete(hupTask);
-                xTaskCreate([](void*){for(;;){Speaker::hupe(0.7);}}, "Hup Task", 1024, NULL, 3, &hupTask);
+                // if(hupTask != NULL)
+                //     vTaskDelete(hupTask);
+                Speaker::startHupe();
+                // xTaskCreate([](void*){long start = millis();for(;;){Speaker::signal();if(millis()-start>1000){hupTask=NULL;vTaskDelete(NULL);}}}, "Hup Task", 1024, NULL, 3, &hupTask);
                 Serial.println("Hupe started");
             } else if(server.arg(i).equals("stop")) {
-                if(hupTask != NULL) {
-                    vTaskDelete(hupTask);
-                    hupTask = NULL;
-                }
+                // if(hupTask != NULL) {
+                //     vTaskDelete(hupTask);
+                //     hupTask = NULL;
+                // }
+                Speaker::stopHupe();
                 Serial.println("Hupe stopped");
             }
         }
@@ -220,5 +241,9 @@ void RemoteControl::sendResult(String content) {
     //200 ist die Antwort das alles OK ist,
     //text/html ist der MimeType
     //content ist unser Text
+    if(lastReqeust==UINT32_MAX) {
+        LightManager::setBremsLight(false);
+        lastReqeust = millis();
+    }
     server.send(200, "text/html", content);  
 }

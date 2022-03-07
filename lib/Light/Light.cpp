@@ -19,8 +19,8 @@ void LightManager::setup() {
                     analogWrite(BACK_LIGHT_R, 0);
 
 #define LIGHTS_ON   digitalWrite(FRONT_LIGHT, 1);   \
-                    analogWrite(BACK_LIGHT_L, 70); \
-                    analogWrite(BACK_LIGHT_R, 70);    
+                    analogWrite(BACK_LIGHT_L, 50); \
+                    analogWrite(BACK_LIGHT_R, 50);    
 
 #define BREMS_LIGHT analogWrite(BACK_LIGHT_L, 255); \
                     analogWrite(BACK_LIGHT_R, 255);

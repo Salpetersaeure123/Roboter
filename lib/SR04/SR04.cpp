@@ -12,7 +12,7 @@ SR04::SR04(int echoPin, int triggerPin) {
 
 
 long SR04::Distance() {
-    delay(25);
+    delay(30);
     long d = 0;
     _duration = 0;
     digitalWrite(_triggerPin, LOW);

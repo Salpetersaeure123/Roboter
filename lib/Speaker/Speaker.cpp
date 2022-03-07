@@ -7,7 +7,7 @@
 
 void Speaker::setup() {
   ledcAttachPin(SPEAKER_PIN, 0);
-  ledcSetup(0, 100000, 8);
+  // ledcSetup(0, 100000, 8);
 }
 
 void Speaker::signal() {
@@ -50,4 +50,20 @@ void Speaker::hupe(double d) {
   delayMicroseconds(230*d);
   ledcWrite(0, OFF);
   delayMicroseconds(930*d);
+}
+
+void Speaker::startHupe() {
+  ledcWriteTone(0, 335);
+}
+
+void Speaker::stopHupe() {
+  ledcWriteTone(0, 0);
+}
+
+void Speaker::startSignal() {
+  ledcWriteTone(0, 500);
+}
+
+void Speaker::startSignal2() {
+  ledcWriteTone(0, 3200);
 }

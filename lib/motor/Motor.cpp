@@ -1,6 +1,6 @@
 #include "Motor.h"
 
-#define ROTATION_SPEED      0.3
+#define ROTATION_SPEED      0.33
 #define ROTATION_DURATION   1700
 
 Motor motor1(MOTOR_LV, MOTOR_LH, MOTOR_LS); // = left

@@ -9,7 +9,7 @@
 #define MOTOR_RH        16
 #define MOTOR_RS        4
 
-#define SPEAKER_PIN     2
+#define SPEAKER_PIN     15
 
 #define I2C_1           Wire
 #define SDA_1           -1

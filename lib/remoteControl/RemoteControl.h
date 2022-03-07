@@ -31,6 +31,7 @@ class RemoteControl {
         static Mode mode;
         static const char* ssid[4];
         static const char* password[4];
+        static const char* hostname;
         static ESP32WebServer server;
         static int speed;
         static unsigned long lastReqeust;

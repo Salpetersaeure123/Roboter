@@ -14,6 +14,9 @@ class Line {
     private:
         static MeassurementResult result;
         static bool correctionLeft, correctionRight;
+        static bool lastRed;
+        static bool lastBlue;
+        static bool lastGreen;
 
 };
 

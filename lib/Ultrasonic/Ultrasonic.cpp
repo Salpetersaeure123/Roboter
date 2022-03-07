@@ -73,9 +73,9 @@ void Ultrasonic::loop() {
 
 void Ultrasonic::loop2() {
   distance = Sensors::getUltrasonicValues();
-  if(distance < 25) {
+  if(distance < 30) {
     distance = Sensors::getUltrasonicValues();
-    if(distance < 25) {
+    if(distance < 30) {
       Serial.println("ausweichen");
       long highest_distance = 0;
       unsigned long startTime = millis();
