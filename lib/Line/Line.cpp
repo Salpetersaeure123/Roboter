@@ -1,9 +1,9 @@
 #include "Line.h"
 
-#define SPEED_ROTATE    0.3
-#define SPEED_DRIVE     0.3
+#define SPEED_ROTATE    0.22
+#define SPEED_DRIVE     0.4
 
-#define MODE true
+#define MODE false
 
 MeassurementResult Line::result;
 bool Line::correctionLeft = false;
@@ -53,7 +53,7 @@ void Line::loop() {
   }
 
 
-  if(result.color1.lux>30&&result.color2.lux>30) {
+  if(result.color1.lux>37&&result.color2.lux>37) {
     if(!lastBlue) {
       lastBlue = true;
       // Motor::setSpeeds(0);

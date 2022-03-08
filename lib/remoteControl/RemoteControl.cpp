@@ -103,7 +103,7 @@ void RemoteControl::setDirection() {
     else
         LightManager::setBremsLight(false);
     if(speed != 0)
-        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 50, 200);
+        speed = (speed<0?speed/abs(speed):1)*map(abs(speed), 0, 100, 50, 255);
     double _speed = 0;
     double _speed2 = 0;
     if(speed == 0) {

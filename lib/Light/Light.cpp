@@ -51,10 +51,13 @@ void LightManager::setBremsLight(bool value) {
 void LightManager::checkAutoLight(void*) {
     for(;;) {
         vTaskDelay(100);
-        if(_mode != AUTO || _brems)
+        if(_mode != AUTO)
             continue;
         if(analogRead(LDR) > MIN_LIGHT_LEVEL) {
-            LIGHTS_ON
+            if(_brems)
+                digitalWrite(FRONT_LIGHT, 1);
+            else
+                LIGHTS_ON
         } else {
             LIGHTS_OFF
         }

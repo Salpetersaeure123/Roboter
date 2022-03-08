@@ -2,7 +2,7 @@
 
 #define SPEED_OFF       0
 #define SPEED_DRIVE     0.4
-#define SPEED_ROTATE    0.24
+#define SPEED_ROTATE    0.27
 
 int Ultrasonic::fourDistances[4] = {};
 int Ultrasonic::direction = 0;

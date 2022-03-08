@@ -18,7 +18,6 @@ enum LightMode {
 class LightManager {
     public:
         static void setup();
-
         static void setLightMode(LightMode);
         static void setLaser(bool value);
         static void setBremsLight(bool value);
