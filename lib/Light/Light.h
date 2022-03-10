@@ -6,7 +6,8 @@
 #include "analogWrite.h"
 
 
-#define MIN_LIGHT_LEVEL 800
+#define DEFAULT_LIGHT_MODE    AUTO
+#define MIN_LIGHT_LEVEL       800
 
 
 enum LightMode {
@@ -16,17 +17,20 @@ enum LightMode {
 };
 
 class LightManager {
-    public:
-        static void setup();
-        static void setLightMode(LightMode);
-        static void setLaser(bool value);
-        static void setBremsLight(bool value);
+  public:
+    static void setup();
 
-    private:
-        static LightMode _mode;
-        static boolean _brems;
+    static void setLightMode(LightMode);
+    static void setLaser(bool value);
+    static void setBrakeLights(bool value);
 
-        static void checkAutoLight(void*);
+  private:
+    // vars
+    static LightMode _mode;
+    static boolean _brake;
+
+    // loop function
+    static void checkAutoLight(void*);
 };
 
 #endif

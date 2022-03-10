@@ -6,8 +6,9 @@
 
 
 void Speaker::setup() {
+  // setup pwm
   ledcAttachPin(SPEAKER_PIN, 0);
-  // ledcSetup(0, 100000, 8);
+  ledcSetup(0, 100000, 8);
 }
 
 void Speaker::signal() {
@@ -19,7 +20,7 @@ void Speaker::signal() {
 }
 
 void Speaker::hupe(double d) {
-  // this generates one period of two tones simoultaneously
+  // this generates one period of two tones simoultaneously (a third)
   ledcWrite(0, ON);
   delayMicroseconds(930*d);
   ledcWrite(0, HALF);
@@ -56,14 +57,14 @@ void Speaker::startHupe() {
   ledcWriteTone(0, 335);
 }
 
-void Speaker::stopHupe() {
-  ledcWriteTone(0, 0);
-}
-
 void Speaker::startSignal() {
   ledcWriteTone(0, 500);
 }
 
 void Speaker::startSignal2() {
   ledcWriteTone(0, 3200);
+}
+
+void Speaker::stopHupe() {
+  ledcWriteTone(0, 0);
 }

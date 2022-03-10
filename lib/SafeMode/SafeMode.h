@@ -6,6 +6,9 @@
 #include "Light.h"
 #include "Motor.h"
 
+// defines
+#define MIN_DISTANCE    20
+
 class SafeMode {
     public:
         static void loop();

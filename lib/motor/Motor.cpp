@@ -1,35 +1,33 @@
 #include "Motor.h"
 
-#define ROTATION_SPEED      0.33
-#define ROTATION_DURATION   1700
-
-Motor motor1(MOTOR_LV, MOTOR_LH, MOTOR_LS); // = left
-Motor motor2(MOTOR_RV, MOTOR_RH, MOTOR_RS); // = rights
+Motor motor1(MOTOR_LV, MOTOR_LH, MOTOR_LS);
+Motor motor2(MOTOR_RV, MOTOR_RH, MOTOR_RS);
 
 Motor::Motor(int pin1, int pin2, int pin3) {
+    // store pin declarations
     _pin1 = pin1;
     _pin2 = pin2;
     _pin3 = pin3;
+
+    // setup pins
     pinMode(_pin1, OUTPUT);
     pinMode(_pin2, OUTPUT);
     pinMode(_pin3, OUTPUT);
-    // digitalWrite(_pin1, LOW);
-    // digitalWrite(_pin2, LOW);
-    // digitalWrite(_pin3, LOW);
 }
 
 void Motor::setSpeed(int speed) {
-    _speed = min(abs(speed), 255);
+    // store speed and direction values
+    _speed = min(abs(speed), MAX_SPEED);
     _direction = (speed >= 0);
-    // analogWrite((_direction ? _pin1 : _pin2), 0);
-    // analogWrite((_direction ? _pin2 : _pin1), _speed);
-    digitalWrite((_direction ? _pin1 : _pin2), 0);
-    digitalWrite((_direction ? _pin2 : _pin1), 1);
+
+    // write outputs
+    digitalWrite(_pin1, _direction ? 0 : 1);
+    digitalWrite(_pin2, _direction ? 1 : 0);
     analogWrite(_pin3, _speed);
 }
 
 void Motor::setSpeed(double percent) {
-    setSpeed((int)(percent*255));
+    setSpeed((int)(percent*MAX_SPEED));
 }
 
 int Motor::getSpeed() {
@@ -81,10 +79,6 @@ void Motor::halfTurn(bool left) {
   motor1.setSpeed((left?-1:1)*ROTATION_SPEED);
   motor2.setSpeed((left?1:-1)*ROTATION_SPEED);
   vTaskDelay(ROTATION_DURATION/2);
-//   long start = millis();
-//   while(millis()-start < ROTATION_DURATION/2) {
-//       Speaker::signal();
-//   }
   setSpeeds(0);
 }
 

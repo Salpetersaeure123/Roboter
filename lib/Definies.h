@@ -11,13 +11,6 @@
 
 #define SPEAKER_PIN     15
 
-#define I2C_1           Wire
-#define SDA_1           -1
-#define SCL_1           -1
-#define I2C_2           Wire1
-#define SDA_2           25
-#define SCL_2           26
-
 #define SONIC_TRIG      32
 #define SONIC_ECHO      33
 
@@ -29,18 +22,18 @@
 
 #define LDR             39
 
-//Settings
-#define ACTIVE_COLOR        true
-#define ACTIVE_LIDAR        true
-#define ACTIVE_ULTRASONIC   true
-
-#define FORCE_INIT_COLOR    false
-#define FORCE_INIT_LIDAR    false
+//I2C
+#define I2C_1           Wire
+#define SDA_1           -1 // default: 20
+#define SCL_1           -1 // default: 21
+#define I2C_2           Wire1
+#define SDA_2           25
+#define SCL_2           26
 
 //Debug
 #define DEBUG               true
 #define DEBUG_COLOR         DEBUG&&Serial&& true
-#define DEBUG_LIDAR         DEBUG&&Serial&& true
+#define DEBUG_LIDAR         DEBUG&&Serial&& false
 #define DEBUG_ULTRASONIC    DEBUG&&Serial&& true
 
 

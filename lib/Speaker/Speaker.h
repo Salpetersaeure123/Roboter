@@ -7,13 +7,18 @@
 class Speaker {
     public:
         static void setup();
+
+        // have to be constantly executed
         static void hupe(double d);
         static void signal();
+
+        // have to be started
         static void startHupe();
-        static void stopHupe();
         static void startSignal();
         static void startSignal2();
 
+        // stop function
+        static void stopHupe();
 
     private:
 

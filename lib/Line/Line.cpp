@@ -1,100 +1,130 @@
 #include "Line.h"
 
-#define SPEED_ROTATE    0.22
-#define SPEED_DRIVE     0.4
-
-#define MODE false
-
 MeassurementResult Line::result;
 bool Line::correctionLeft = false;
 bool Line::correctionRight = false;
 bool Line::lastRed = false;
 bool Line::lastBlue = false;
 bool Line::lastGreen = false;
+
+// vars for siren
 unsigned long last = 0;
 bool state = false;
 
 void Line::loop() { 
-  result = Sensors::getColorValues(true);
-  if(result.color1.lux>70 || result.color2.lux>70) {
+  // get sensor values
+  result = Sensors::getColorValues(PRINT_VALUES);
+
+  // checkss if sensors disconnected
+  if(result.color1.lux>DISCONNECTED || result.color2.lux>DISCONNECTED) {
+    // turns off
     Motor::setSpeeds(0);
-    LightManager::setBremsLight(true);
+    LightManager::setBrakeLights(true);
     return;
   }
-  if (result.color1.lux < 22 && !correctionRight) {
+
+  // checks if left sensor is away from line
+  if (result.color1.lux < MIN_LIGHT_LEVEL && !correctionRight) {
+    // set motors to rotate
     motor2.setSpeed(0);
-    motor1.setSpeed(-SPEED_ROTATE-0.08);
+    motor1.setSpeed(-SPEED_ROTATE-SPEED_BACK_OFFSET);
+    // short break so that both sensors have to start up
     vTaskDelay(1);
-    motor2.setSpeed(MODE?0:SPEED_ROTATE);
+    motor2.setSpeed(COUNTER_ROTATE?SPEED_ROTATE:0);
+
+    // set parms
     correctionLeft = true;
-    LightManager::setBremsLight(true);
+    LightManager::setBrakeLights(true);
+
   } else if(!correctionRight) {
+    // set motors to drive straight
     motor1.setSpeed(SPEED_DRIVE);
     motor2.setSpeed(SPEED_DRIVE);
+
+    // set parms
     correctionLeft = false;
-    LightManager::setBremsLight(false);
+    LightManager::setBrakeLights(false);
   }
 
-  if(result.color2.lux < 22 && !correctionLeft) {
+  // checks if right sensor is away from line
+  if(result.color2.lux < MIN_LIGHT_LEVEL && !correctionLeft) {
+    // set motors to rotate
     motor1.setSpeed(0);
-    motor2.setSpeed(-SPEED_ROTATE-0.08);
+    motor2.setSpeed(-SPEED_ROTATE-SPEED_BACK_OFFSET);
+    // short break so that both sensors have to start up
     vTaskDelay(1);
-    motor1.setSpeed(MODE?0:SPEED_ROTATE);
+    motor1.setSpeed(COUNTER_ROTATE?SPEED_ROTATE:0);
+
+    // set parms
     correctionRight = true;
-    LightManager::setBremsLight(true);
+    LightManager::setBrakeLights(true);
+
   } else if(!correctionLeft) {
+    // set motors to drive straight
     motor2.setSpeed(SPEED_DRIVE);
     motor1.setSpeed(SPEED_DRIVE);
+
+    // set parms
     correctionRight = false;
-    LightManager::setBremsLight(false);
+    LightManager::setBrakeLights(false);
   }
+
+  // if no correction execute SafeMode-loop (since it would delay too much for the correction)
   if(!correctionLeft && !correctionRight) {
     SafeMode::loop();
   }
 
 
-  if(result.color1.lux>37&&result.color2.lux>37) {
+  // check colors
+
+  // check blue (currently silver)
+  if(result.color1.lux>LIGHT_LEVEL_BLUE && result.color2.lux>LIGHT_LEVEL_BLUE) {
+    // if first reading on blue
     if(!lastBlue) {
       lastBlue = true;
-      // Motor::setSpeeds(0);
-      // unsigned long start = millis();
-      // while(millis()-start < 700) {
-      //   Speaker::signal();
-      // }
+
+      // set parms
       Speaker::startSignal2();
       Motor::halfTurn();
       Speaker::stopHupe();
     }
-  } else if(result.color1.lux<26&&result.color2.lux<26)
+
+  // resets if not on blue
+  } else if(result.color1.lux<LIGHT_LEVEL_NORMAL && result.color2.lux<LIGHT_LEVEL_NORMAL)
     lastBlue = false;
 
-  if((result.color1.lux>20&&result.color1.b<20&&result.color1.r<20)||(result.color2.lux>20&&result.color2.b<20&&result.color2.r<20)) {
-    if(!lastGreen || millis()-last > 1000) {
+
+  //check green
+  if((result.color1.lux>LIGHT_LEVEL_GREEN && result.color1.b<LIGHT_LEVEL_GREEN && result.color1.r<LIGHT_LEVEL_GREEN) || (result.color2.lux>LIGHT_LEVEL_GREEN && result.color2.b<LIGHT_LEVEL_GREEN && result.color2.r<LIGHT_LEVEL_GREEN)) {
+    // if first reading on green or if siren needs to be updated
+    if(!lastGreen || millis()-last > SIREN_INTERVAL) {
       lastGreen = true;
+
+      // set parms
       state=!state;
       last = millis();
-      ledcWriteTone(0, state?440:587);
-      // Speaker::startSignal2();
+      ledcWriteTone(0, state?SIREN_LOW:SIREN_HIGH);
     }
+
+  // resets if not on green
   } else if(result.color1.b>22&&result.color1.r>22&&result.color2.b>22&&result.color2.r>22) {
     lastGreen = false;
     state = false;
     Speaker::stopHupe();
   }
-  // if(result.color1.r>1&&result.color2.r>1) {
-  //   if(!lastRed) {
-  //     lastRed = true;
-  //     Speaker::startSignal2();
-  //     // Motor::setSpeeds(0);
-  //     // unsigned long start = millis();
-  //     // while(millis()-start < 700) {
-  //     //   Speaker::signal();
-  //     // }
-  //     // Motor::setSpeeds(SPEED_DRIVE);
-  //   }
-  // } else {
-  //   Speaker::stopHupe();
-  //   lastRed = false;
-  // }
+
+  // check red (currently not in use)
+  if(result.color1.r>LIGHT_LEVEL_RED && result.color2.r>LIGHT_LEVEL_RED) {
+    // if first reading on red
+    if(!lastRed) {
+      lastRed = true;
+
+      // do stuff
+    }
+
+  // resets if not on red
+  } else {
+    lastRed = false;
+  }
 }
 

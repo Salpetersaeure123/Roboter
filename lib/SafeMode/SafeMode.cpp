@@ -4,26 +4,28 @@
 bool SafeMode::enabled = true;
 
 void SafeMode::loop() {
+    // returns if safe mode disabled
     if(!enabled)
         return;
-    if(Sensors::getUltrasonicValues() < 20) {
-        if(Sensors::getUltrasonicValues() < 20) {
+    // check if distance in front to small
+    if(Sensors::getUltrasonicValues() < MIN_DISTANCE) {
+        // to avoid false alerts, redo check
+        if(Sensors::getUltrasonicValues() < MIN_DISTANCE) {
+            // stop remote control from moving
     	    RemoteControl::correction = true;
-            LightManager::setBremsLight(true);
-            // Motor::setSpeeds(0);
-            // long start = millis();
-            // while(millis()-start < 1000) {
-            //     Speaker::signal();
-            // }
+            // start turning and giving optical and acoustic feedback
+            LightManager::setBrakeLights(true);
             Speaker::startSignal();
             Motor::halfTurn();
-            LightManager::setBremsLight(false);
+            LightManager::setBrakeLights(false);
             Speaker::stopHupe();
+            // gives control back to remote control
             RemoteControl::correction = false;
         }
     }
 }
 
 void SafeMode::setSafeMode(bool value) {
+    // store value
     enabled = value;
 }

@@ -7,17 +7,23 @@
 #include "Arduino.h"
 #include "SR04.h"
 
+//settings
+#define ACTIVE_COLOR        true
+#define ACTIVE_LIDAR        false
+#define ACTIVE_ULTRASONIC   true
+
+#define FORCE_INIT_COLOR    false
+#define FORCE_INIT_LIDAR    false
+
+
+// meassurement data of one sensor
 struct Meassurement {
-    uint16_t r, g, b, c, colorTemp, lux;
+    uint16_t r, g, b, c, colorTemp, lux = 78;
 };
 
-struct MeassurementDiff {
-    int16_t r, g, b, c, colorTemp, lux;
-};
-
+// meassurement data of all sensors
 struct MeassurementResult {
-    Meassurement color1, color2;
-    MeassurementDiff difference;
+    Meassurement color1, color2, difference;
 };
 
 class Sensors {
@@ -30,9 +36,11 @@ public:
     static int64_t getUltrasonicValues(bool print = false);
 
 private:
+    // instances
     static Adafruit_TCS34725 color1, color2;
     static Adafruit_VL53L0X lidar;
     static SR04 ultrasonic;
+    // vars
     static MeassurementResult result;
     static boolean color1Connected;
     static boolean color2Connected;
